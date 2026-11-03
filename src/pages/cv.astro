@@ -1,0 +1,111 @@
+---
+/* Hidden page: reachable at /cv/ but not linked from navigation or the sitemap. */
+import { getEntry, render } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Contacts from '../components/Contacts.astro';
+import { existsSync } from 'node:fs';
+
+// The download button appears only once public/cv.pdf exists.
+const hasPdf = existsSync('public/cv.pdf');
+
+const page = await getEntry('pages', 'cv');
+if (!page) throw new Error('Missing src/content/pages/cv.md');
+const { Content } = await render(page);
+---
+
+<BaseLayout title={page.data.title} description={page.data.description} lang={page.data.lang} noindex>
+  <div class="container">
+    <article class="cv">
+      <h1>{page.data.title}</h1>
+      {page.data.subtitle && <p class="lead">{page.data.subtitle}</p>}
+      <p class="actions">
+        {hasPdf && <a href="/cv.pdf" download class="button">Download PDF</a>}
+        <button type="button" class="button ghost" onclick="window.print()">Print</button>
+      </p>
+      <div class="prose">
+        <Content />
+      </div>
+      <section class="contacts" aria-labelledby="cv-contacts">
+        <h2 id="cv-contacts">Contacts</h2>
+        <Contacts />
+      </section>
+    </article>
+  </div>
+</BaseLayout>
+
+<style>
+  .cv {
+    max-width: var(--width-reading);
+    padding-top: var(--space-12);
+  }
+
+  h1 {
+    margin-bottom: var(--space-2);
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin: var(--space-6) 0 var(--space-8);
+  }
+
+  .button {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-button);
+    border: 1px solid var(--color-ink);
+    background: var(--color-ink);
+    color: var(--color-paper);
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .button.ghost {
+    background: transparent;
+    color: var(--color-ink);
+    border-color: var(--color-border);
+  }
+
+  .button.ghost:hover {
+    background: var(--color-oat);
+  }
+
+  .cv :global(.prose h2) {
+    margin-top: var(--space-8);
+    padding-bottom: var(--space-2);
+    border-bottom: var(--border);
+    font-size: 20px;
+  }
+
+  .contacts {
+    margin-top: var(--space-8);
+  }
+
+  .contacts h2 {
+    font-size: 20px;
+    padding-bottom: var(--space-2);
+    border-bottom: var(--border);
+  }
+
+  @media print {
+    :global(.site-header),
+    :global(.site-footer),
+    :global(.skip-link),
+    .actions {
+      display: none !important;
+    }
+
+    :global(body) {
+      background: #fff;
+    }
+
+    .cv {
+      padding-top: 0;
+    }
+  }
+</style>

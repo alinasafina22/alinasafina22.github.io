@@ -1,0 +1,31 @@
+---
+import type { StatusDef } from '../utils/shelves';
+interface Props {
+  status: StatusDef;
+}
+const { status } = Astro.props;
+---
+
+<span class="status" style={`--accent: var(--color-${status.accent})`}>
+  <span class="glyph" aria-hidden="true">{status.glyph}</span>{status.label}
+</span>
+
+<style>
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: var(--text-meta);
+    line-height: 1;
+    padding: 5px 9px 5px 7px;
+    border-radius: var(--radius-pill);
+    background: var(--accent);
+    color: var(--color-ink);
+    white-space: nowrap;
+  }
+
+  .glyph {
+    font-size: 11px;
+  }
+</style>

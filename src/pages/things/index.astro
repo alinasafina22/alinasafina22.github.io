@@ -1,0 +1,50 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import ThingCard from '../../components/ThingCard.astro';
+import EmptyState from '../../components/EmptyState.astro';
+
+const things = (await getCollection('things')).sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+---
+
+<BaseLayout title="Things" description="A visual collection of interesting discoveries: pictures, links and small finds.">
+  <div class="container">
+    <PageHeader
+      title="Things"
+      description="Pictures, links, websites and small discoveries I wanted to keep."
+      doodle="sparkle"
+      accent="var(--color-lavender)"
+    />
+    {
+      things.length ? (
+        <div class="board">
+          {things.map((t) => (
+            <ThingCard thing={t} />
+          ))}
+        </div>
+      ) : (
+        <EmptyState text="Nothing here yet." hint="Add a Markdown file to src/content/things/" />
+      )
+    }
+  </div>
+</BaseLayout>
+
+<style>
+  .board {
+    columns: 1;
+    column-gap: var(--space-6);
+  }
+
+  @media (min-width: 640px) {
+    .board {
+      columns: 2;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .board {
+      columns: 3;
+    }
+  }
+</style>

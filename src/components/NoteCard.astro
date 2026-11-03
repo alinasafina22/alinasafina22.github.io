@@ -1,0 +1,95 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import DateLabel from './DateLabel.astro';
+import TagList from './TagList.astro';
+import { excerpt, noteTitle } from '../utils/format';
+
+interface Props {
+  note: CollectionEntry<'notes'>;
+  compact?: boolean;
+}
+const { note, compact = false } = Astro.props;
+const title = noteTitle(note);
+const text = note.data.description ?? excerpt(note.body, compact ? 120 : 220);
+---
+
+<article class:list={['note-card', { compact }]} lang={note.data.lang}>
+  <div class="top">
+    <DateLabel date={note.data.date} />
+    {note.data.demo && <span class="demo-badge">demo</span>}
+    {note.data.draft && <span class="demo-badge">draft</span>}
+  </div>
+  {
+    note.data.title ? (
+      <>
+        <h3 class="title">
+          <a href={`/notes/${note.id}/`}>{title}</a>
+        </h3>
+        {text && <p class="excerpt">{text}</p>}
+      </>
+    ) : (
+      <p class="untitled">
+        <a href={`/notes/${note.id}/`}>{text || title}</a>
+      </p>
+    )
+  }
+  {!compact && <TagList tags={note.data.tags} />}
+</article>
+
+<style>
+  .note-card {
+    display: grid;
+    gap: var(--space-2);
+    padding-block: var(--space-6);
+    border-bottom: var(--border);
+  }
+
+  .compact {
+    padding-block: var(--space-4);
+  }
+
+  .top {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .title {
+    margin: 0;
+    font-size: var(--text-card);
+  }
+
+  .title a {
+    text-decoration: none;
+  }
+
+  .title a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--color-dusty-rose);
+  }
+
+  .untitled {
+    margin: 0;
+    max-width: var(--width-reading);
+    font-size: 17px;
+  }
+
+  .untitled a {
+    text-decoration: none;
+  }
+
+  .untitled a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--color-dusty-rose);
+  }
+
+  .excerpt {
+    margin: 0;
+    color: var(--color-muted);
+    max-width: var(--width-reading);
+  }
+
+  .compact .excerpt {
+    font-size: var(--text-small);
+  }
+</style>

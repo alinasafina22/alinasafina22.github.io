@@ -1,0 +1,451 @@
+---
+/*
+ * Reading stats for the Books shelf: headline numbers, books per month for a chosen year,
+ * and books per year. Only finished books with a finish date are counted.
+ * Plain HTML/CSS bars; a tiny script switches the year.
+ */
+import type { ShelfItem } from '../utils/shelves';
+
+interface Props {
+  items: ShelfItem[];
+}
+const { items } = Astro.props;
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTHS_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+const finished = items
+  .filter((i) => i.status.key === 'read')
+  .map((i) => ({ item: i, date: i.dates.find((d) => d.label === 'Finished')?.date }))
+  .filter((x): x is { item: ShelfItem; date: Date } => Boolean(x.date));
+
+const byYear = new Map<number, { item: ShelfItem; date: Date }[][]>();
+for (const f of finished) {
+  const y = f.date.getUTCFullYear();
+  if (!byYear.has(y)) byYear.set(y, Array.from({ length: 12 }, () => []));
+  byYear.get(y)![f.date.getUTCMonth()].push(f);
+}
+const years = [...byYear.keys()].sort((a, b) => b - a);
+const yearTotals = years.map((y) => ({ year: y, total: byYear.get(y)!.flat().length }));
+const maxYearTotal = Math.max(1, ...yearTotals.map((y) => y.total));
+const maxMonth = Math.max(1, ...years.flatMap((y) => byYear.get(y)!.map((m) => m.length)));
+
+const now = new Date();
+const thisYear = now.getFullYear();
+const currentYear = years.includes(thisYear) ? thisYear : years[0];
+const readingNow = items.filter((i) => i.status.key === 'reading').length;
+const wantToRead = items.filter((i) => i.status.key === 'want-to-read').length;
+const thisYearTotal = byYear.get(thisYear)?.flat().length ?? 0;
+const plural = (n: number) => (n === 1 ? 'book' : 'books');
+---
+
+{
+  years.length > 0 && (
+    <section class="stats" aria-labelledby="stats-title" data-stats>
+      <h2 id="stats-title" class="visually-hidden">Reading stats</h2>
+
+      <dl class="tiles">
+        <div class="tile">
+          <dt class="meta">read in {thisYear}</dt>
+          <dd>{thisYearTotal}</dd>
+        </div>
+        <div class="tile">
+          <dt class="meta">reading now</dt>
+          <dd>{readingNow}</dd>
+        </div>
+        <div class="tile">
+          <dt class="meta">want to read</dt>
+          <dd>{wantToRead}</dd>
+        </div>
+        <div class="tile">
+          <dt class="meta">read since {years[years.length - 1]}</dt>
+          <dd>{finished.length}</dd>
+        </div>
+      </dl>
+
+      <div class="charts">
+        <figure class="chart months-chart">
+          <figcaption>
+            <span class="chart-title">Books per month</span>
+            <span class="year-chips" role="group" aria-label="Year">
+              {years.map((y) => (
+                <button type="button" class="chip year-chip" data-year={String(y)} aria-pressed={y === currentYear ? "true" : "false"}>
+                  {y}
+                </button>
+              ))}
+            </span>
+          </figcaption>
+
+          {years.map((y) => {
+            const months = byYear.get(y)!;
+            const peak = Math.max(...months.map((m) => m.length));
+            return (
+              <div class="bars" data-year-panel={y} hidden={y !== currentYear}>
+                {months.map((list, m) => (
+                  <div class="col">
+                    <button
+                      type="button"
+                      class="bar-hit"
+                      aria-label={`${MONTHS_LONG[m]} ${y}: ${list.length} ${plural(list.length)}`}
+                      disabled={list.length === 0}
+                    >
+                      {list.length > 0 && list.length === peak && <span class="peak">{list.length}</span>}
+                      <span class="bar" style={`height:${(list.length / maxMonth) * 100}%`} />
+                      {list.length > 0 && (
+                        <span class="tip" role="tooltip">
+                          <strong>
+                            {MONTHS_LONG[m]} · {list.length} {plural(list.length)}
+                          </strong>
+                          {list.slice(0, 6).map((f) => (
+                            <span class="tip-book" lang={f.item.lang}>
+                              {f.item.title}
+                            </span>
+                          ))}
+                          {list.length > 6 && <span class="tip-more">+ {list.length - 6} more</span>}
+                        </span>
+                      )}
+                    </button>
+                    <span class="month meta" aria-hidden="true">
+                      {MONTHS[m]}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </figure>
+
+        <figure class="chart years-chart">
+          <figcaption>
+            <span class="chart-title">Books per year</span>
+          </figcaption>
+          <ul class="hbars">
+            {yearTotals.map(({ year, total }) => (
+              <li>
+                <span class="hbar-label meta">{year}</span>
+                <span class="hbar-track">
+                  <span class="hbar" style={`width:${(total / maxYearTotal) * 100}%`} />
+                </span>
+                <span class="hbar-value">{total}</span>
+              </li>
+            ))}
+          </ul>
+        </figure>
+      </div>
+
+      <details class="table-view">
+        <summary class="meta">Show as table</summary>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Year</th>
+                {MONTHS.map((m) => (
+                  <th scope="col">{m}</th>
+                ))}
+                <th scope="col">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {years.map((y) => (
+                <tr>
+                  <th scope="row">{y}</th>
+                  {byYear.get(y)!.map((list) => (
+                    <td>{list.length || '·'}</td>
+                  ))}
+                  <td>
+                    <strong>{byYear.get(y)!.flat().length}</strong>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+  )
+}
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-stats]').forEach((root) => {
+    const chips = [...root.querySelectorAll<HTMLButtonElement>('[data-year]')];
+    const panels = [...root.querySelectorAll<HTMLElement>('[data-year-panel]')];
+    chips.forEach((chip) =>
+      chip.addEventListener('click', () => {
+        const year = chip.dataset.year;
+        chips.forEach((c) => c.setAttribute('aria-pressed', String(c === chip)));
+        panels.forEach((p) => (p.hidden = p.dataset.yearPanel !== year));
+      }),
+    );
+  });
+</script>
+
+<style>
+  .stats {
+    margin-bottom: var(--space-12);
+  }
+
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+    margin: 0 0 var(--space-6);
+  }
+
+  @media (min-width: 640px) {
+    .tiles {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .tile {
+    padding: var(--space-3) var(--space-4);
+    border: var(--border);
+    border-radius: var(--radius-card);
+    background: var(--color-card);
+  }
+
+  .tile dt {
+    margin: 0;
+  }
+
+  .tile dd {
+    margin: 2px 0 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 30px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .charts {
+    display: grid;
+    gap: var(--space-6);
+  }
+
+  @media (min-width: 900px) {
+    .charts {
+      grid-template-columns: 2fr 1fr;
+      align-items: stretch;
+    }
+  }
+
+  .chart {
+    margin: 0;
+    padding: var(--space-4) var(--space-4) var(--space-3);
+    border: var(--border);
+    border-radius: var(--radius-card);
+    background: var(--color-card);
+    min-width: 0;
+  }
+
+  figcaption {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+
+  .chart-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 17px;
+  }
+
+  .year-chips {
+    display: flex;
+    gap: var(--space-1);
+  }
+
+  .year-chip {
+    min-height: 30px;
+    padding: 0 var(--space-3);
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  /* Monthly columns */
+  .bars {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 4px;
+    height: 170px;
+    border-bottom: 1px solid var(--color-border);
+    background-image: linear-gradient(to top, var(--color-oat) 1px, transparent 1px);
+    background-size: 100% 25%;
+  }
+
+  .bars[hidden] {
+    display: none;
+  }
+
+  .col {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .bar-hit {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: default;
+  }
+
+  .bar-hit:not(:disabled):hover .bar,
+  .bar-hit:focus-visible .bar {
+    background: var(--color-ink);
+  }
+
+  .bar {
+    width: min(70%, 22px);
+    border-radius: 4px 4px 0 0;
+    background: var(--color-sage-deep);
+    transition: background var(--transition);
+  }
+
+  .peak {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    margin-bottom: 2px;
+  }
+
+  .month {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+  }
+
+  @media (max-width: 479px) {
+    .month {
+      font-size: 9px;
+      letter-spacing: 0;
+    }
+  }
+
+  .months-chart .bars {
+    margin-bottom: 22px;
+  }
+
+  .tip {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    z-index: 5;
+    display: none;
+    flex-direction: column;
+    gap: 2px;
+    width: max-content;
+    max-width: 220px;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-button);
+    background: var(--color-ink);
+    color: var(--color-paper);
+    font-size: 12px;
+    line-height: 1.35;
+    text-align: left;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+
+  .col:first-child .tip,
+  .col:nth-child(2) .tip {
+    left: 0;
+    transform: none;
+  }
+
+  .col:nth-last-child(-n + 2) .tip {
+    left: auto;
+    right: 0;
+    transform: none;
+  }
+
+  .bar-hit:hover .tip,
+  .bar-hit:focus-visible .tip {
+    display: flex;
+  }
+
+  .tip strong {
+    font-weight: 600;
+  }
+
+  .tip-book,
+  .tip-more {
+    opacity: 0.85;
+  }
+
+  /* Yearly bars */
+  .hbars {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .hbars li {
+    display: grid;
+    grid-template-columns: 40px 1fr 28px;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .hbar-track {
+    height: 14px;
+  }
+
+  .hbar {
+    display: block;
+    height: 100%;
+    border-radius: 0 4px 4px 0;
+    background: var(--color-sage-deep);
+  }
+
+  .hbar-value {
+    font-family: var(--font-display);
+    font-weight: 600;
+    text-align: right;
+  }
+
+  .table-view {
+    margin-top: var(--space-3);
+  }
+
+  .table-view summary {
+    cursor: pointer;
+    width: max-content;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+    margin-top: var(--space-3);
+  }
+
+  table {
+    border-collapse: collapse;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  th,
+  td {
+    padding: 4px 8px;
+    border-bottom: var(--border);
+    text-align: center;
+  }
+
+  th[scope='row'] {
+    text-align: left;
+  }
+</style>

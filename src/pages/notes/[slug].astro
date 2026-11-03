@@ -1,0 +1,150 @@
+---
+import { render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import DateLabel from '../../components/DateLabel.astro';
+import TagList from '../../components/TagList.astro';
+import NoteCard from '../../components/NoteCard.astro';
+import { getNotes, noteTitle, excerpt } from '../../utils/format';
+
+export async function getStaticPaths() {
+  const notes = await getNotes();
+  return notes.map((note, i) => ({
+    params: { slug: note.id },
+    // notes are newest first: "newer" is the previous index
+    props: { note, newer: notes[i - 1], older: notes[i + 1], all: notes },
+  }));
+}
+
+const { note, newer, older, all } = Astro.props;
+const { Content } = await render(note);
+const title = noteTitle(note);
+
+// Related: other notes sharing the most tags.
+const related = all
+  .filter((n) => n.id !== note.id)
+  .map((n) => ({ n, score: n.data.tags.filter((t) => note.data.tags.includes(t)).length }))
+  .filter((r) => r.score > 0)
+  .sort((a, b) => b.score - a.score || b.n.data.date.getTime() - a.n.data.date.getTime())
+  .slice(0, 3)
+  .map((r) => r.n);
+---
+
+<BaseLayout
+  title={title}
+  description={note.data.description ?? excerpt(note.body, 155)}
+  type="article"
+  lang={note.data.lang}
+  noindex={note.data.draft}
+>
+  <div class="container">
+    <Breadcrumbs items={[{ href: '/notes/', label: 'Notes' }]} />
+    <article class="note">
+      <header>
+        <p class="top">
+          <DateLabel date={note.data.date} />
+          {note.data.demo && <span class="demo-badge">demo</span>}
+          {note.data.draft && <span class="demo-badge">draft</span>}
+        </p>
+        {note.data.title && <h1>{note.data.title}</h1>}
+        <TagList tags={note.data.tags} />
+      </header>
+      <div class="prose">
+        <Content />
+      </div>
+    </article>
+
+    {
+      (newer || older) && (
+        <nav class="pager" aria-label="More notes">
+          {older ? (
+            <a href={`/notes/${older.id}/`} class="prev">
+              <span class="meta">← older</span>
+              <span lang={older.data.lang}>{noteTitle(older)}</span>
+            </a>
+          ) : (
+            <span />
+          )}
+          {newer && (
+            <a href={`/notes/${newer.id}/`} class="next">
+              <span class="meta">newer →</span>
+              <span lang={newer.data.lang}>{noteTitle(newer)}</span>
+            </a>
+          )}
+        </nav>
+      )
+    }
+
+    {
+      related.length > 0 && (
+        <section class="related" aria-labelledby="related">
+          <h2 id="related">Related notes</h2>
+          <div class="list">
+            {related.map((n) => (
+              <NoteCard note={n} compact />
+            ))}
+          </div>
+        </section>
+      )
+    }
+  </div>
+</BaseLayout>
+
+<style>
+  .note {
+    max-width: var(--width-reading);
+    padding-top: var(--space-6);
+  }
+
+  header {
+    margin-bottom: var(--space-8);
+  }
+
+  .top {
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
+    margin-bottom: var(--space-3);
+  }
+
+  h1 {
+    margin-bottom: var(--space-4);
+  }
+
+  .pager {
+    max-width: var(--width-reading);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+    margin-top: var(--space-12);
+    padding-top: var(--space-6);
+    border-top: var(--border);
+  }
+
+  .pager a {
+    display: grid;
+    gap: var(--space-1);
+    text-decoration: none;
+    font-family: var(--font-display);
+    font-weight: 500;
+    line-height: 1.3;
+  }
+
+  .pager a:hover span:last-child {
+    text-decoration: underline;
+    text-decoration-color: var(--color-dusty-rose);
+  }
+
+  .next {
+    text-align: right;
+  }
+
+  .related {
+    max-width: var(--width-reading);
+    margin-top: var(--space-12);
+  }
+
+  .related .list {
+    border-top: var(--border);
+  }
+</style>

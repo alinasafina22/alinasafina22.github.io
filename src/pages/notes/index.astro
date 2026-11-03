@@ -1,0 +1,39 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import NoteCard from '../../components/NoteCard.astro';
+import EmptyState from '../../components/EmptyState.astro';
+import { getNotes } from '../../utils/format';
+
+const notes = await getNotes();
+---
+
+<BaseLayout title="Notes" description="Short thoughts, informal notes and things I learned.">
+  <div class="container">
+    <PageHeader title="Notes" description="Short thoughts, half-formed ideas and things I learned along the way." doodle="loop-arrow" />
+    <p class="rss meta"><a href="/rss.xml">RSS feed</a></p>
+    {
+      notes.length ? (
+        <div class="list">
+          {notes.map((note) => (
+            <NoteCard note={note} />
+          ))}
+        </div>
+      ) : (
+        <EmptyState text="No notes found." hint="Add a Markdown file to src/content/notes/" />
+      )
+    }
+  </div>
+</BaseLayout>
+
+<style>
+  .rss {
+    margin-top: calc(-1 * var(--space-4));
+    margin-bottom: var(--space-6);
+  }
+
+  .list {
+    max-width: var(--width-reading);
+    border-top: var(--border);
+  }
+</style>

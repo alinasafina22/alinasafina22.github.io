@@ -1,0 +1,74 @@
+---
+import EmailLink from './EmailLink.astro';
+import { profileLinks, hasEmail } from '../data/contacts';
+
+interface Props {
+  /** 'list' for About and CV, 'inline' for the footer. */
+  variant?: 'list' | 'inline';
+}
+const { variant = 'list' } = Astro.props;
+const links = profileLinks();
+---
+
+{
+  variant === 'inline' ? (
+    <ul class="inline">
+      {links.map((l) => (
+        <li>
+          <a href={l.href} rel="me noopener" target="_blank">
+            {l.label}
+          </a>
+        </li>
+      ))}
+      {hasEmail() && (
+        <li>
+          <EmailLink showCopy={false} label="Email" />
+        </li>
+      )}
+    </ul>
+  ) : (
+    <ul class="list">
+      {hasEmail() && (
+        <li>
+          <span class="meta">email</span>
+          <EmailLink />
+        </li>
+      )}
+      {links.map((l) => (
+        <li>
+          <span class="meta">{l.label.toLowerCase()}</span>
+          <a href={l.href} rel="me noopener" target="_blank">
+            {l.handle}
+            <span class="visually-hidden">(opens in a new tab)</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+<style>
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+  }
+
+  .list {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .list li {
+    display: grid;
+    grid-template-columns: 88px 1fr;
+    align-items: baseline;
+    gap: var(--space-3);
+  }
+</style>

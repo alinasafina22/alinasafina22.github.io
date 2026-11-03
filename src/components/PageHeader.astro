@@ -1,0 +1,42 @@
+---
+import Doodle, { type DoodleName } from './Doodle.astro';
+interface Props {
+  title: string;
+  description?: string;
+  doodle?: DoodleName;
+  accent?: string;
+}
+const { title, description, doodle, accent = 'var(--color-sage)' } = Astro.props;
+---
+
+<header class="page-header">
+  <h1>
+    {title}
+    {doodle && <Doodle name={doodle} size={30} fill={accent} class="mark" />}
+  </h1>
+  {description && <p class="lead">{description}</p>}
+  <slot />
+</header>
+
+<style>
+  .page-header {
+    padding-top: var(--space-12);
+    margin-bottom: var(--space-8);
+  }
+
+  h1 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-2);
+  }
+
+  .lead {
+    max-width: var(--width-reading);
+    margin: 0;
+  }
+
+  h1 :global(.mark) {
+    transform: rotate(-8deg);
+  }
+</style>

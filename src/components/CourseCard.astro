@@ -1,0 +1,102 @@
+---
+/* Wide card for courses: text matters more than artwork here. */
+import Cover from './Cover.astro';
+import StatusBadge from './StatusBadge.astro';
+import Rating from './Rating.astro';
+import type { ShelfItem } from '../utils/shelves';
+
+interface Props {
+  item: ShelfItem;
+}
+const { item } = Astro.props;
+---
+
+<article class="course-card">
+  <Cover image={item.cover} alt={item.coverAlt} title={item.title} shape="wide" doodle="computer" sizes="(min-width: 1024px) 160px, 120px" />
+  <div class="body">
+    <h3 class="title" lang={item.lang}><a href={item.href}>{item.title}</a></h3>
+    {(item.creator || item.subline) && <p class="creator">{[item.creator, item.subline].filter(Boolean).join(' · ')}</p>}
+    {item.note && <p class="note" lang={item.lang}>{item.note}</p>}
+    <div class="row">
+      <StatusBadge status={item.status} />
+      <Rating value={item.rating} />
+      {item.demo && <span class="demo-badge">demo</span>}
+    </div>
+  </div>
+</article>
+
+<style>
+  .course-card {
+    position: relative;
+    display: grid;
+    grid-template-columns: 112px 1fr;
+    gap: var(--space-4);
+    align-items: start;
+    padding: var(--space-4);
+    border: var(--border);
+    border-radius: var(--radius-card);
+    background: var(--color-card);
+    transition: border-color var(--transition), background var(--transition);
+  }
+
+  .course-card:hover {
+    border-color: var(--color-muted);
+  }
+
+  .course-card:focus-within {
+    border-color: var(--color-focus);
+  }
+
+  @media (min-width: 1024px) {
+    .course-card {
+      grid-template-columns: 140px 1fr;
+    }
+  }
+
+  .body {
+    display: grid;
+    gap: var(--space-2);
+    min-width: 0;
+  }
+
+  .title {
+    margin: 0;
+    font-size: var(--text-card);
+  }
+
+  .title a {
+    text-decoration: none;
+  }
+
+  /* Whole card is clickable, link stays the accessible name. */
+  .title a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-card);
+  }
+
+  .creator,
+  .note {
+    margin: 0;
+    font-size: var(--text-small);
+  }
+
+  .creator {
+    color: var(--color-muted);
+  }
+
+  .note {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+</style>

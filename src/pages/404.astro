@@ -1,0 +1,24 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Doodle from '../components/Doodle.astro';
+---
+
+<BaseLayout title="Not found" noindex>
+  <div class="container lost">
+    <Doodle name="loop-arrow" size={72} color="var(--color-dusty-rose)" />
+    <h1>This page wandered off.</h1>
+    <p class="lead">It might have moved, or it never existed. Happens to the best of us.</p>
+    <p><a href="/">Back to the start</a> · <a href="/notes/">Read some notes</a></p>
+  </div>
+</BaseLayout>
+
+<style>
+  .lost {
+    padding-block: var(--space-16);
+    max-width: calc(var(--width-reading) + 2 * var(--gutter));
+  }
+
+  .lost :global(.doodle) {
+    margin-bottom: var(--space-6);
+  }
+</style>

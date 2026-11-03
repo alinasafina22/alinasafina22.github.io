@@ -1,0 +1,39 @@
+---
+import Doodle from './Doodle.astro';
+interface Props {
+  text: string;
+  hint?: string;
+}
+const { text, hint } = Astro.props;
+---
+
+<div class="empty">
+  <Doodle name="book" size={44} color="var(--color-muted)" fill="var(--color-oat)" />
+  <p class="text">{text}</p>
+  {hint && <p class="hint">{hint}</p>}
+</div>
+
+<style>
+  .empty {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-2);
+    padding: var(--space-12) var(--space-4);
+    border: 1.5px dashed var(--color-border);
+    border-radius: var(--radius-large);
+    text-align: center;
+  }
+
+  .text {
+    margin: var(--space-2) 0 0;
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 500;
+  }
+
+  .hint {
+    margin: 0;
+    font-size: var(--text-small);
+    color: var(--color-muted);
+  }
+</style>

@@ -1,0 +1,94 @@
+/*
+ * azh. design tokens — the single source of truth for colors, type and spacing.
+ * Components must use these variables instead of hardcoded values.
+ * A dark theme can later be added by redefining the color tokens only.
+ */
+:root {
+  /* Primary colors */
+  --color-paper: #f5f1e8;
+  --color-oat: #e7e0d3;
+  --color-ink: #343a35;
+  --color-muted: #6b6a63; /* spec: #77766F, darkened slightly to pass WCAG AA on paper */
+  --color-border: #d8d1c4;
+
+  /* Accent colors */
+  --color-sage: #c9d8c5;
+  --color-lavender: #d8cde8;
+  --color-peach: #e7c6b5;
+  --color-dusty-rose: #d6a7a0;
+  --color-dusty-blue: #b7c8d7;
+  --color-butter: #e6ddaa;
+
+  /* Derived */
+  --color-card: #faf7f0;
+  --color-sage-deep: #6e9467; /* chart bars: sage dark enough for 3:1 contrast on paper */
+  --color-focus: #3f6b8a;
+
+  /* Fonts. Bricolage Grotesque has no Cyrillic, so Russian headings fall back to Inter. */
+  --font-display: 'Bricolage Grotesque Variable', 'Inter Variable', system-ui, sans-serif;
+  --font-body: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* Type scale (mobile first, desktop overrides below) */
+  --text-logo: 28px;
+  --text-hero: 38px;
+  --text-page: 30px;
+  --text-section: 22px;
+  --text-card: 18px;
+  --text-body: 16px;
+  --text-small: 14px;
+  --text-meta: 12px;
+
+  --leading-body: 1.65;
+  --leading-heading: 1.15;
+
+  /* Spacing (4px base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Radius */
+  --radius-button: 8px;
+  --radius-image: 8px;
+  --radius-card: 12px;
+  --radius-large: 16px;
+  --radius-pill: 999px;
+
+  /* Layout */
+  --width-content: 1120px;
+  --width-reading: 680px;
+  --gutter: 20px;
+
+  /* Motion */
+  --transition: 170ms ease;
+
+  --border: 1px solid var(--color-border);
+}
+
+@media (min-width: 640px) {
+  :root {
+    --gutter: 32px;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --gutter: 40px;
+    --text-logo: 32px;
+    --text-hero: 52px;
+    --text-page: 36px;
+    --text-section: 26px;
+    --text-card: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition: 0ms;
+  }
+}

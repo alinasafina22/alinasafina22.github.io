@@ -1,0 +1,114 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { Image } from 'astro:assets';
+import DateLabel from './DateLabel.astro';
+import Doodle from './Doodle.astro';
+import { hostOf } from '../utils/format';
+
+interface Props {
+  thing: CollectionEntry<'things'>;
+}
+const { thing } = Astro.props;
+const d = thing.data;
+const ACCENTS = ['peach', 'lavender', 'butter', 'dusty-blue', 'sage'];
+const accent = ACCENTS[[...d.title].reduce((h, c) => h + c.charCodeAt(0), 0) % ACCENTS.length];
+---
+
+<article class="thing" style={`--accent: var(--color-${accent})`} lang={d.lang}>
+  {
+    d.image ? (
+      <Image
+        src={d.image}
+        alt={d.imageAlt ?? ''}
+        widths={[400, 700, 1000]}
+        sizes="(min-width: 1024px) 360px, (min-width: 640px) 45vw, 100vw"
+        loading="lazy"
+        class="img"
+      />
+    ) : (
+      <div class="swatch" aria-hidden="true">
+        <Doodle name="sparkle" size={28} fill="var(--color-paper)" />
+      </div>
+    )
+  }
+  <div class="body">
+    <div class="top">
+      <DateLabel date={d.date} prefix="saved" />
+      {d.demo && <span class="demo-badge">demo</span>}
+    </div>
+    <h3 class="title"><a href={`/things/${thing.id}/`}>{d.title}</a></h3>
+    {d.description && <p class="desc">{d.description}</p>}
+    {d.url && <p class="host meta">↗ {hostOf(d.url)}</p>}
+  </div>
+</article>
+
+<style>
+  .thing {
+    position: relative;
+    break-inside: avoid;
+    margin-bottom: var(--space-6);
+    border: var(--border);
+    border-radius: var(--radius-card);
+    background: var(--color-card);
+    overflow: hidden;
+    transition: border-color var(--transition), transform var(--transition);
+  }
+
+  .thing:hover {
+    border-color: var(--color-muted);
+    transform: rotate(-0.4deg);
+  }
+
+  .thing:focus-within {
+    border-color: var(--color-focus);
+  }
+
+  .img {
+    width: 100%;
+    border-bottom: var(--border);
+  }
+
+  .swatch {
+    display: grid;
+    place-items: end start;
+    height: 56px;
+    padding: var(--space-3) var(--space-4);
+    background: var(--accent);
+  }
+
+  .body {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-4);
+  }
+
+  .top {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .title {
+    margin: 0;
+    font-size: var(--text-card);
+  }
+
+  .title a {
+    text-decoration: none;
+  }
+
+  .title a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  .desc {
+    margin: 0;
+    font-size: var(--text-small);
+  }
+
+  .host {
+    margin: 0;
+  }
+</style>

@@ -1,0 +1,30 @@
+---
+import { CATEGORIES, type CategoryKey } from '../utils/shelves';
+interface Props {
+  current?: CategoryKey;
+  counts?: Partial<Record<CategoryKey, number>>;
+}
+const { current, counts = {} } = Astro.props;
+---
+
+<nav aria-label="Bookshelf categories">
+  <ul class="chips tabs">
+    {
+      CATEGORIES.map((c) => (
+        <li>
+          <a class="chip" href={`/bookshelves/${c.key}/`} aria-current={c.key === current ? 'page' : undefined}>
+            {c.label}
+            {counts[c.key] !== undefined && <span class="count">{counts[c.key]}</span>}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<style>
+  .tabs {
+    list-style: none;
+    margin-block: 0;
+  }
+</style>

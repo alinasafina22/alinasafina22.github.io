@@ -1,0 +1,83 @@
+---
+import Doodle from './Doodle.astro';
+import Contacts from './Contacts.astro';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="container inner">
+    <div class="left">
+      <span class="brand">azh<span class="dot">.</span></span>
+      <span class="meta">© {year}</span>
+    </div>
+    <div class="links">
+      <Contacts variant="inline" />
+      <a href="/rss.xml">RSS</a>
+    </div>
+    <p class="made">
+      <Doodle name="star" size={14} />
+      made with curiosity and too many browser tabs
+    </p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: var(--border);
+    margin-top: var(--space-16);
+    padding-block: var(--space-8);
+    font-size: var(--text-small);
+  }
+
+  .inner {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .left {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+  }
+
+  .brand {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: -0.04em;
+  }
+
+  .dot {
+    color: var(--color-dusty-rose);
+  }
+
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+  }
+
+  .made {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0;
+    color: var(--color-muted);
+  }
+
+  @media (min-width: 640px) {
+    .inner {
+      grid-template-columns: auto 1fr;
+      align-items: center;
+    }
+
+    .links {
+      justify-content: flex-end;
+    }
+
+    .made {
+      grid-column: 1 / -1;
+    }
+  }
+</style>

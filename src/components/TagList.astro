@@ -1,0 +1,48 @@
+---
+import Tag from './Tag.astro';
+interface Props {
+  tags: string[];
+  /** If set, each tag links to `${linkTo}${encodeURIComponent(tag)}`. */
+  linkTo?: string;
+}
+const { tags, linkTo } = Astro.props;
+---
+
+{
+  tags.length > 0 && (
+    <ul class="tags" aria-label="Tags">
+      {tags.map((t) => (
+        <li>
+          {linkTo ? (
+            <a href={`${linkTo}${encodeURIComponent(t)}`} class="tag-link">
+              <Tag label={t} />
+            </a>
+          ) : (
+            <Tag label={t} />
+          )}
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+<style>
+  .tags {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+  }
+
+  .tag-link {
+    text-decoration: none;
+    border-radius: var(--radius-pill);
+  }
+
+  .tag-link:hover :global(.tag) {
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
+</style>

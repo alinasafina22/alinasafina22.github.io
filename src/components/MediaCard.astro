@@ -1,0 +1,85 @@
+---
+/* Card for cover-based shelf items: books, movies, TV shows. */
+import Cover from './Cover.astro';
+import StatusBadge from './StatusBadge.astro';
+import Rating from './Rating.astro';
+import type { ShelfItem } from '../utils/shelves';
+
+interface Props {
+  item: ShelfItem;
+  eager?: boolean;
+}
+const { item, eager } = Astro.props;
+---
+
+<article class="media-card">
+  <a href={item.href} class="link">
+    <Cover
+      image={item.cover}
+      alt={item.coverAlt}
+      title={item.title}
+      creator={item.creator}
+      eager={eager}
+      lang={item.lang}
+      doodle={item.category.key === 'books' ? 'book' : 'star'}
+    />
+    <h3 class="title" lang={item.lang}>{item.title}</h3>
+  </a>
+  {(item.creator || item.subline) && <p class="creator">{[item.creator, item.subline].filter(Boolean).join(' · ')}</p>}
+  <div class="row">
+    <StatusBadge status={item.status} />
+    <Rating value={item.rating} />
+    {item.demo && <span class="demo-badge">demo</span>}
+  </div>
+</article>
+
+<style>
+  .media-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+  }
+
+  .link {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    text-decoration: none;
+  }
+
+  .link :global(.cover) {
+    transition: transform var(--transition), border-color var(--transition);
+  }
+
+  .link:hover :global(.cover) {
+    transform: translateY(-3px) rotate(-0.6deg);
+    border-color: var(--color-muted);
+  }
+
+  .title {
+    margin: 0;
+    font-size: var(--text-card);
+    overflow-wrap: anywhere;
+  }
+
+  .link:hover .title {
+    text-decoration: underline;
+    text-decoration-color: var(--color-dusty-rose);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+  }
+
+  .creator {
+    margin: 0;
+    font-size: var(--text-small);
+    color: var(--color-muted);
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+</style>

@@ -1,0 +1,83 @@
+---
+/*
+ * Spam-resistant email: the address is stored reversed and in two parts,
+ * and only assembled by a script in the visitor's browser.
+ */
+import { contacts, hasEmail } from '../data/contacts';
+
+interface Props {
+  showCopy?: boolean;
+  /** Fixed link text instead of the address itself. */
+  label?: string;
+}
+const { showCopy = true, label } = Astro.props;
+const rev = (s: string) => [...s].reverse().join('');
+---
+
+{
+  hasEmail() && (
+    <span class="email" data-email data-u={rev(contacts.email.user)} data-d={rev(contacts.email.domain)}>
+      <a href="#" data-email-link data-keep-label={label ? '' : undefined}>
+        {label ?? 'email'}
+      </a>
+      {showCopy && (
+        <button type="button" class="copy" data-email-copy hidden>
+          copy
+        </button>
+      )}
+      <span class="visually-hidden" aria-live="polite" data-email-status />
+    </span>
+  )
+}
+
+<script>
+  const rev = (s = '') => [...s].reverse().join('');
+  document.querySelectorAll<HTMLElement>('[data-email]').forEach((root) => {
+    const address = `${rev(root.dataset.u)}@${rev(root.dataset.d)}`;
+    const link = root.querySelector<HTMLAnchorElement>('[data-email-link]');
+    const copy = root.querySelector<HTMLButtonElement>('[data-email-copy]');
+    const status = root.querySelector<HTMLElement>('[data-email-status]');
+    if (link) {
+      link.href = `mailto:${address}`;
+      if (!link.hasAttribute('data-keep-label')) link.textContent = address;
+    }
+    if (copy && navigator.clipboard) {
+      copy.hidden = false;
+      copy.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(address);
+          copy.textContent = 'copied ✓';
+          if (status) status.textContent = 'Email copied';
+          setTimeout(() => (copy.textContent = 'copy'), 1600);
+        } catch {
+          /* clipboard blocked: the mailto link still works */
+        }
+      });
+    }
+  });
+</script>
+
+<style>
+  .email {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+
+  .copy {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1;
+    padding: 4px 8px;
+    border: var(--border);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    cursor: pointer;
+    transition: background var(--transition);
+  }
+
+  .copy:hover {
+    background: var(--color-oat);
+  }
+</style>
