@@ -7,6 +7,10 @@ import sitemap from '@astrojs/sitemap';
 export default defineConfig({
   site: process.env.SITE_URL || 'https://azh.blog',
   trailingSlash: 'ignore',
+  markdown: {
+    // Code blocks in notes: a light, warm theme that fits the paper background.
+    shikiConfig: { theme: 'rose-pine-dawn', wrap: false },
+  },
   integrations: [
     sitemap({
       // /cv/ is intentionally hidden from navigation, keep it out of the sitemap too.

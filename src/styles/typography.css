@@ -115,6 +115,47 @@ p {
   font-size: inherit;
 }
 
+/* Code block wrapper added by the script in BaseLayout: language label + copy button. */
+.prose .code-block {
+  position: relative;
+  margin-block: var(--space-6);
+}
+
+.prose .code-block pre {
+  margin: 0;
+  padding-top: calc(var(--space-4) + 14px);
+}
+
+.prose .code-block .code-lang,
+.prose .code-block .code-copy {
+  position: absolute;
+  top: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1;
+  color: var(--color-muted);
+}
+
+.prose .code-block .code-lang {
+  left: var(--space-4);
+  text-transform: lowercase;
+  pointer-events: none;
+}
+
+.prose .code-block .code-copy {
+  right: 8px;
+  padding: 4px 8px;
+  border: var(--border);
+  border-radius: 6px;
+  background: var(--color-paper);
+  cursor: pointer;
+}
+
+.prose .code-block .code-copy:hover,
+.prose .code-block .code-copy:focus-visible {
+  color: var(--color-ink);
+}
+
 .prose table {
   width: 100%;
   border-collapse: collapse;
