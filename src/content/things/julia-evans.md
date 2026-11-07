@@ -1,6 +1,6 @@
 ---
 title: Julia Evans
-description: Блог и зины Джулии Эванс. Сложные штуки (сети, Linux, git, отладка) объясняются простыми словами и рисунками от руки.
+description: Блог Джулии Эванс. Computer science в простых картинках.
 url: https://jvns.ca/
 date: 2026-11-07
 tags: [сайты, программирование]
