@@ -1,0 +1,118 @@
+---
+/* Hidden page: reachable at /cv/ but not linked from navigation or the sitemap. */
+import { getEntry, render } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Contacts from '../components/Contacts.astro';
+import { existsSync } from 'node:fs';
+import { localize } from '../i18n/content';
+import { toLocale, useTranslations } from '../i18n/ui';
+
+const locale = toLocale(Astro.currentLocale);
+const t = useTranslations(locale);
+
+// The download button appears only once the PDF exists: public/cv.pdf (English), public/cv-ru.pdf (Russian).
+const pdf = locale === 'ru' ? 'cv-ru.pdf' : 'cv.pdf';
+const hasPdf = existsSync(`public/${pdf}`);
+
+const entry = await getEntry('pages', 'cv');
+if (!entry) throw new Error('Missing src/content/pages/cv.md');
+const page = await localize(entry, locale);
+const { Content } = await render(page.source);
+---
+
+<BaseLayout title={page.data.title} description={page.data.description} lang={page.bodyLang} noindex>
+  <div class="container">
+    <article class="cv">
+      <h1>{page.data.title}</h1>
+      {page.data.subtitle && <p class="lead">{page.data.subtitle}</p>}
+      <p class="actions">
+        {hasPdf && <a href={`/${pdf}`} download class="button">{t('cv.download')}</a>}
+        <button type="button" class="button ghost" onclick="window.print()">{t('cv.print')}</button>
+      </p>
+      <div class="prose">
+        <Content />
+      </div>
+      <section class="contacts" aria-labelledby="cv-contacts">
+        <h2 id="cv-contacts">{t('cv.contacts')}</h2>
+        <Contacts />
+      </section>
+    </article>
+  </div>
+</BaseLayout>
+
+<style>
+  .cv {
+    max-width: var(--width-reading);
+    padding-top: var(--space-12);
+  }
+
+  h1 {
+    margin-bottom: var(--space-2);
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin: var(--space-6) 0 var(--space-8);
+  }
+
+  .button {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-button);
+    border: 1px solid var(--color-ink);
+    background: var(--color-ink);
+    color: var(--color-paper);
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .button.ghost {
+    background: transparent;
+    color: var(--color-ink);
+    border-color: var(--color-border);
+  }
+
+  .button.ghost:hover {
+    background: var(--color-oat);
+  }
+
+  .cv :global(.prose h2) {
+    margin-top: var(--space-8);
+    padding-bottom: var(--space-2);
+    border-bottom: var(--border);
+    font-size: 20px;
+  }
+
+  .contacts {
+    margin-top: var(--space-8);
+  }
+
+  .contacts h2 {
+    font-size: 20px;
+    padding-bottom: var(--space-2);
+    border-bottom: var(--border);
+  }
+
+  @media print {
+    :global(.site-header),
+    :global(.site-footer),
+    :global(.skip-link),
+    .actions {
+      display: none !important;
+    }
+
+    :global(body) {
+      background: #fff;
+    }
+
+    .cv {
+      padding-top: 0;
+    }
+  }
+</style>

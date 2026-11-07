@@ -8,6 +8,8 @@ interface Props {
 }
 const { variant = 'list' } = Astro.props;
 const links = profileLinks();
+import { toLocale, useTranslations } from '../i18n/ui';
+const t = useTranslations(toLocale(Astro.currentLocale));
 ---
 
 {
@@ -22,7 +24,7 @@ const links = profileLinks();
       ))}
       {hasEmail() && (
         <li>
-          <EmailLink showCopy={false} label="Email" />
+          <EmailLink showCopy={false} label={t('contact.email').replace(/^./, (c) => c.toUpperCase())} />
         </li>
       )}
     </ul>
@@ -30,7 +32,7 @@ const links = profileLinks();
     <ul class="list">
       {hasEmail() && (
         <li>
-          <span class="meta">email</span>
+          <span class="meta">{t('contact.email')}</span>
           <EmailLink />
         </li>
       )}
@@ -39,7 +41,7 @@ const links = profileLinks();
           <span class="meta">{l.label.toLowerCase()}</span>
           <a href={l.href} rel="me noopener" target="_blank">
             {l.handle}
-            <span class="visually-hidden">(opens in a new tab)</span>
+            <span class="visually-hidden">{t('newTab')}</span>
           </a>
         </li>
       ))}

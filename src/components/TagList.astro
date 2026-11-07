@@ -6,11 +6,13 @@ interface Props {
   linkTo?: string;
 }
 const { tags, linkTo } = Astro.props;
+import { toLocale, useTranslations } from '../i18n/ui';
+const t = useTranslations(toLocale(Astro.currentLocale));
 ---
 
 {
   tags.length > 0 && (
-    <ul class="tags" aria-label="Tags">
+    <ul class="tags" aria-label={t('tags')}>
       {tags.map((t) => (
         <li>
           {linkTo ? (

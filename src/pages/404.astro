@@ -9,6 +9,7 @@ import Doodle from '../components/Doodle.astro';
     <h1>This page wandered off.</h1>
     <p class="lead">It might have moved, or it never existed. Happens to the best of us.</p>
     <p><a href="/">Back to the start</a> · <a href="/notes/">Read some notes</a></p>
+    <p class="ru" lang="ru">Эта страница куда-то ушла. <a href="/ru/">На главную</a></p>
   </div>
 </BaseLayout>
 
@@ -16,6 +17,10 @@ import Doodle from '../components/Doodle.astro';
   .lost {
     padding-block: var(--space-16);
     max-width: calc(var(--width-reading) + 2 * var(--gutter));
+  }
+
+  .ru {
+    color: var(--color-muted);
   }
 
   .lost :global(.doodle) {

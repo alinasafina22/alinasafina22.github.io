@@ -1,10 +1,12 @@
 ---
 import { formatDate, isoDate } from '../utils/format';
+import { toLocale } from '../i18n/ui';
 interface Props {
   date: Date;
   prefix?: string;
 }
 const { date, prefix } = Astro.props;
+const locale = toLocale(Astro.currentLocale);
 ---
 
-<span class="meta">{prefix && `${prefix} `}<time datetime={isoDate(date)}>{formatDate(date)}</time></span>
+<span class="meta">{prefix && `${prefix} `}<time datetime={isoDate(date)}>{formatDate(date, locale)}</time></span>

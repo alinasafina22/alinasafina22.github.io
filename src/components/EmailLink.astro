@@ -12,17 +12,19 @@ interface Props {
 }
 const { showCopy = true, label } = Astro.props;
 const rev = (s: string) => [...s].reverse().join('');
+import { toLocale } from '../i18n/ui';
+const ru = toLocale(Astro.currentLocale) === 'ru';
 ---
 
 {
   hasEmail() && (
     <span class="email" data-email data-u={rev(contacts.email.user)} data-d={rev(contacts.email.domain)}>
       <a href="#" data-email-link data-keep-label={label ? '' : undefined}>
-        {label ?? 'email'}
+        {label ?? (ru ? 'почта' : 'email')}
       </a>
       {showCopy && (
         <button type="button" class="copy" data-email-copy hidden>
-          copy
+          {ru ? 'копировать' : 'copy'}
         </button>
       )}
       <span class="visually-hidden" aria-live="polite" data-email-status />
@@ -32,6 +34,7 @@ const rev = (s: string) => [...s].reverse().join('');
 
 <script>
   const rev = (s = '') => [...s].reverse().join('');
+  const ru = document.documentElement.lang === 'ru';
   document.querySelectorAll<HTMLElement>('[data-email]').forEach((root) => {
     const address = `${rev(root.dataset.u)}@${rev(root.dataset.d)}`;
     const link = root.querySelector<HTMLAnchorElement>('[data-email-link]');
@@ -46,9 +49,10 @@ const rev = (s: string) => [...s].reverse().join('');
       copy.addEventListener('click', async () => {
         try {
           await navigator.clipboard.writeText(address);
-          copy.textContent = 'copied ✓';
-          if (status) status.textContent = 'Email copied';
-          setTimeout(() => (copy.textContent = 'copy'), 1600);
+          const idle = copy.textContent;
+          copy.textContent = ru ? 'скопировано ✓' : 'copied ✓';
+          if (status) status.textContent = ru ? 'Почта скопирована' : 'Email copied';
+          setTimeout(() => (copy.textContent = idle), 1600);
         } catch {
           /* clipboard blocked: the mailto link still works */
         }

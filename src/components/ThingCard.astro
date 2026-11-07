@@ -1,20 +1,23 @@
 ---
-import type { CollectionEntry } from 'astro:content';
 import { Image } from 'astro:assets';
+import type { Localized } from '../i18n/content';
+import { localePath, toLocale, useTranslations } from '../i18n/ui';
 import DateLabel from './DateLabel.astro';
 import Doodle from './Doodle.astro';
 import { hostOf } from '../utils/format';
 
 interface Props {
-  thing: CollectionEntry<'things'>;
+  thing: Localized<'things'>;
 }
 const { thing } = Astro.props;
+const locale = toLocale(Astro.currentLocale);
+const t = useTranslations(locale);
 const d = thing.data;
 const ACCENTS = ['peach', 'lavender', 'butter', 'dusty-blue', 'sage'];
 const accent = ACCENTS[[...d.title].reduce((h, c) => h + c.charCodeAt(0), 0) % ACCENTS.length];
 ---
 
-<article class="thing" style={`--accent: var(--color-${accent})`} lang={d.lang}>
+<article class="thing" style={`--accent: var(--color-${accent})`} lang={thing.lang}>
   {
     d.image ? (
       <Image
@@ -33,10 +36,10 @@ const accent = ACCENTS[[...d.title].reduce((h, c) => h + c.charCodeAt(0), 0) % A
   }
   <div class="body">
     <div class="top">
-      <DateLabel date={d.date} prefix="saved" />
+      <DateLabel date={d.date} prefix={t('things.saved')} />
       {d.demo && <span class="demo-badge">demo</span>}
     </div>
-    <h3 class="title"><a href={`/things/${thing.id}/`}>{d.title}</a></h3>
+    <h3 class="title"><a href={localePath(locale, `/things/${thing.id}/`)}>{d.title}</a></h3>
     {d.description && <p class="desc">{d.description}</p>}
     {d.url && <p class="host meta">↗ {hostOf(d.url)}</p>}
   </div>

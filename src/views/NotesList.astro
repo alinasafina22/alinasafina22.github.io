@@ -1,0 +1,42 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import NoteCard from '../components/NoteCard.astro';
+import EmptyState from '../components/EmptyState.astro';
+import { getNotes } from '../utils/format';
+import { localePath, toLocale, useTranslations } from '../i18n/ui';
+
+const locale = toLocale(Astro.currentLocale);
+const t = useTranslations(locale);
+const notes = await getNotes(locale);
+---
+
+<BaseLayout title={t('notes.title')} description={t('notes.meta')}>
+  <div class="container">
+    <PageHeader title={t('notes.title')} description={t('notes.lead')} doodle="loop-arrow" />
+    <p class="rss meta"><a href={localePath(locale, '/rss.xml')}>{t('notes.rss')}</a></p>
+    {
+      notes.length ? (
+        <div class="list">
+          {notes.map((note) => (
+            <NoteCard note={note} />
+          ))}
+        </div>
+      ) : (
+        <EmptyState text={t('notes.empty')} hint={t('notes.emptyHint')} />
+      )
+    }
+  </div>
+</BaseLayout>
+
+<style>
+  .rss {
+    margin-top: calc(-1 * var(--space-4));
+    margin-bottom: var(--space-6);
+  }
+
+  .list {
+    max-width: var(--width-reading);
+    border-top: var(--border);
+  }
+</style>

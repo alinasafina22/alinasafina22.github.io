@@ -1,0 +1,10 @@
+---
+import View from '../../../views/NotePage.astro';
+import { notePaths } from '../../../i18n/paths';
+
+export function getStaticPaths() {
+  return notePaths('ru');
+}
+---
+
+<View {...Astro.props} />

@@ -1,24 +1,46 @@
 ---
+import { LOCALES, localePath, switchLocalePath, toLocale, useTranslations, LOCALE_NAMES } from '../i18n/ui';
+
+const locale = toLocale(Astro.currentLocale);
+const t = useTranslations(locale);
 const NAV = [
-  { href: '/', label: 'Home' },
-  { href: '/notes/', label: 'Notes' },
-  { href: '/bookshelves/', label: 'Bookshelves' },
-  { href: '/things/', label: 'Things' },
-  { href: '/about/', label: 'About' },
+  { href: '/', label: t('nav.home') },
+  { href: '/notes/', label: t('nav.notes') },
+  { href: '/bookshelves/', label: t('nav.bookshelves') },
+  { href: '/things/', label: t('nav.things') },
+  { href: '/about/', label: t('nav.about') },
 ];
 
-const path = Astro.url.pathname.replace(/\/?$/, '/');
+// Path without the language prefix, so "active" works the same in both languages.
+const path = switchLocalePath(Astro.url.pathname, 'en').replace(/\/?$/, '/');
 const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWith(href));
 ---
 
 <header class="site-header">
   <div class="container bar">
-    <a href="/" class="logo" aria-label="azh., home">
+    <a href={localePath(locale, '/')} class="logo" aria-label={`azh., ${t('nav.home')}`}>
       azh<span class="dot">.</span>
       <svg class="squiggle" viewBox="0 0 60 8" aria-hidden="true" focusable="false">
         <path d="M1 5c6-4 9 2 15-1s9-3 14 0 9 2 14-1 9-2 15 1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
       </svg>
     </a>
+
+    <div class="right">
+    <nav class="lang" aria-label={t('lang.switch')}>
+      {
+        LOCALES.map((l) => (
+          <a
+            href={switchLocalePath(Astro.url.pathname, l)}
+            hreflang={l}
+            lang={l}
+            aria-current={l === locale ? 'true' : undefined}
+            title={LOCALE_NAMES[l]}
+          >
+            {l.toUpperCase()}
+          </a>
+        ))
+      }
+    </nav>
 
     <button class="menu-button" type="button" aria-expanded="false" aria-controls="site-nav">
       <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false">
@@ -26,15 +48,15 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
         <path class="l2" d="M4 12h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
         <path class="l3" d="M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
       </svg>
-      <span class="visually-hidden">Menu</span>
+      <span class="visually-hidden">{t('menu')}</span>
     </button>
 
-    <nav id="site-nav" class="nav" aria-label="Main">
+    <nav id="site-nav" class="nav" aria-label={t('nav.main')}>
       <ul>
         {
           NAV.map((item) => (
             <li>
-              <a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>
+              <a href={localePath(locale, item.href)} aria-current={isActive(item.href) ? 'page' : undefined}>
                 {item.label}
               </a>
             </li>
@@ -42,6 +64,7 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
         }
       </ul>
     </nav>
+    </div>
   </div>
 </header>
 
@@ -105,6 +128,43 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
 
   .logo:hover .squiggle {
     color: var(--color-dusty-rose);
+  }
+
+  .right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  /* Language switch: two small pills, the current one filled. */
+  .lang {
+    display: flex;
+    padding: 2px;
+    border: var(--border);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1;
+  }
+
+  .lang a {
+    display: grid;
+    place-items: center;
+    min-width: 36px;
+    min-height: 28px;
+    padding: 0 8px;
+    border-radius: var(--radius-pill);
+    text-decoration: none;
+    color: var(--color-muted);
+  }
+
+  .lang a:hover {
+    color: var(--color-ink);
+  }
+
+  .lang a[aria-current='true'] {
+    background: var(--color-ink);
+    color: var(--color-paper);
   }
 
   .menu-button {
@@ -193,6 +253,11 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
   @media (min-width: 640px) {
     .menu-button {
       display: none;
+    }
+
+    .right {
+      flex-direction: row-reverse;
+      gap: var(--space-4);
     }
 
     .nav,

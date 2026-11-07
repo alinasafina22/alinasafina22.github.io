@@ -5,11 +5,13 @@ interface Props {
   size?: 'small' | 'large';
 }
 const { value, size = 'small' } = Astro.props;
+import { toLocale, useTranslations } from '../i18n/ui';
+const t = useTranslations(toLocale(Astro.currentLocale));
 ---
 
 {
   value && (
-    <span class:list={['rating', size]} role="img" aria-label={`Rated ${value} out of 10`}>
+    <span class:list={['rating', size]} role="img" aria-label={t('rating', { n: value ?? 0 })}>
       <svg viewBox="0 0 20 20" aria-hidden="true" class="star">
         <path d="M10 1.8l2.3 5.4 5.8.5-4.4 3.8 1.4 5.7L10 14.2l-5 3 1.3-5.7L1.9 7.7l5.8-.5L10 1.8Z" />
       </svg>

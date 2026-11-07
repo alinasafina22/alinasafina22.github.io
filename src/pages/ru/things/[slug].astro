@@ -1,0 +1,10 @@
+---
+import View from '../../../views/ThingPage.astro';
+import { thingPaths } from '../../../i18n/paths';
+
+export function getStaticPaths() {
+  return thingPaths('ru');
+}
+---
+
+<View {...Astro.props} />

@@ -1,32 +1,5 @@
 ---
-import { getEntry, render } from 'astro:content';
-import BaseLayout from '../layouts/BaseLayout.astro';
-import PageHeader from '../components/PageHeader.astro';
-import Contacts from '../components/Contacts.astro';
-
-const page = await getEntry('pages', 'about');
-if (!page) throw new Error('Missing src/content/pages/about.md');
-const { Content } = await render(page);
+import View from '../views/About.astro';
 ---
 
-<BaseLayout title={page.data.title} description={page.data.description} lang={page.data.lang}>
-  <div class="container">
-    <PageHeader title={page.data.title} doodle="cup" accent="var(--color-butter)" />
-    <div class="prose">
-      <Content />
-    </div>
-    <section class="contacts" aria-labelledby="contacts">
-      <h2 id="contacts">Find me elsewhere</h2>
-      <Contacts />
-    </section>
-  </div>
-</BaseLayout>
-
-<style>
-  .contacts {
-    max-width: var(--width-reading);
-    margin-top: var(--space-12);
-    padding-top: var(--space-6);
-    border-top: var(--border);
-  }
-</style>
+<View />

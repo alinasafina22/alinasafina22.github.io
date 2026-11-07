@@ -1,6 +1,10 @@
 ---
 import Doodle from './Doodle.astro';
 import Contacts from './Contacts.astro';
+import { localePath, toLocale, useTranslations } from '../i18n/ui';
+
+const locale = toLocale(Astro.currentLocale);
+const t = useTranslations(locale);
 
 const year = new Date().getFullYear();
 ---
@@ -13,11 +17,11 @@ const year = new Date().getFullYear();
     </div>
     <div class="links">
       <Contacts variant="inline" />
-      <a href="/rss.xml">RSS</a>
+      <a href={localePath(locale, '/rss.xml')}>RSS</a>
     </div>
     <p class="made">
       <Doodle name="star" size={14} />
-      made with curiosity and too many browser tabs
+      {t('footer.made')}
     </p>
   </div>
 </footer>
