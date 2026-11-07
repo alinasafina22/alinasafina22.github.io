@@ -12,6 +12,8 @@ Outside of work, my life is mostly chaos. This site is my attempt to bring some 
 ## Things I love
 
 - **Music.** I'm learning to play the piano.
+- **Programming.** Writing code and making things work.
+- **Solving puzzles.** Logic puzzles, tricky bugs, anything with a hidden answer.
 - **Books.** Detective stories, classics, sometimes technical books. My ratings and reviews are on the [shelf](/bookshelves/books/).
 
 ## Right now
