@@ -151,22 +151,6 @@ const things = defineCollection({
     }),
 });
 
-/**
- * Monthly plans: one file per month, plans written as a Markdown checklist:
- *   - [ ] not done yet
- *   - [x] done
- */
-const plans = defineCollection({
-  loader: md('plans'),
-  schema: z.object({
-    /** Year and month, e.g. 2026-11 */
-    month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/),
-    /** Optional theme or motto for the month. */
-    title: z.string().optional(),
-    lang,
-  }),
-});
-
 /** Editable copy for fixed pages: home, about, cv. */
 const pages = defineCollection({
   loader: md('pages'),
@@ -180,4 +164,4 @@ const pages = defineCollection({
   }),
 });
 
-export const collections = { notes, books, courses, movies, tvShows, things, plans, pages };
+export const collections = { notes, books, courses, movies, tvShows, things, pages };
