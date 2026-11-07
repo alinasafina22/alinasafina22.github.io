@@ -3,16 +3,18 @@ title: About
 description: A little about the person behind azh.
 ---
 
-> **Placeholder.** This page is a template. Replace the text below with your own words in `src/content/pages/about.md`.
+Hi, I'm Alina.
 
-Hi! I'm Alina. This is my little corner of the internet.
+I'm a QA engineer and a programmer. I test backends, write code, and like it when everything adds up.
 
-## Things I'm into
+Outside of work, my life is mostly chaos. This site is my attempt to bring some order to it: a place to sort what I read, learn and find interesting. Quite literally onto shelves, see [Bookshelves](/bookshelves/).
 
-- Something you love doing
-- Something you're learning right now
-- Something you could talk about for hours
+## Things I love
 
-## What I'm working on
+- **Music.** I'm learning to play the piano.
+- **Books.** Detective stories, classics, sometimes technical books. My ratings and reviews are on the [shelf](/bookshelves/books/).
 
-A sentence or two about current projects.
+## Right now
+
+- Reading *The Likeness* by Tana French.
+- Taking Andrew Ng's Machine Learning Specialization.
