@@ -4,7 +4,7 @@
  */
 export const contacts = {
   /** Email is split in two so the full address never appears in the page source. */
-  email: { user: '', domain: '' }, // e.g. { user: 'hello', domain: 'example.com' }
+  email: { user: 'alinasafina22', domain: 'gmail.com' },
   telegram: 'safinalina17',
   instagram: 'safinalina17',
   github: 'alinasafina22',
