@@ -37,12 +37,8 @@ p {
   overflow-wrap: break-word;
 }
 
-.prose p,
-.prose ul,
-.prose ol,
-.prose blockquote,
-.prose pre,
-.prose figure {
+/* :where() keeps this reset weak, so the spacing rule below wins. */
+.prose :where(p, ul, ol, blockquote, pre, figure) {
   margin-block: 0;
 }
 
