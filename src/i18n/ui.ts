@@ -48,7 +48,7 @@ const en = {
   'nav.things': 'Things',
   'nav.about': 'About',
   'lang.switch': 'Language',
-  'footer.made': 'made with curiosity and too many browser tabs',
+  'footer.made': 'made for myself, bit by bit',
   'breadcrumbs': 'Breadcrumbs',
   'tags': 'Tags',
 
@@ -177,7 +177,7 @@ const ru: Record<Key, string> = {
   'nav.things': 'Находки',
   'nav.about': 'Обо мне',
   'lang.switch': 'Язык',
-  'footer.made': 'сделано с любопытством и слишком большим числом вкладок',
+  'footer.made': 'делаю для себя, по чуть-чуть',
   'breadcrumbs': 'Навигация',
   'tags': 'Теги',
 
