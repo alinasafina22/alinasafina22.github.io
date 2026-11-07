@@ -7,7 +7,7 @@ export const contacts = {
   email: { user: '', domain: '' }, // e.g. { user: 'hello', domain: 'example.com' }
   telegram: 'safinalina17',
   instagram: 'safinalina17',
-  github: '', // GitHub username
+  github: 'alinasafina22',
 };
 
 export interface ContactLink {
