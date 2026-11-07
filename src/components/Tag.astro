@@ -3,9 +3,11 @@ interface Props {
   label: string;
 }
 const { label } = Astro.props;
+import { tagLabel, toLocale } from '../i18n/ui';
+const shown = tagLabel(label, toLocale(Astro.currentLocale));
 ---
 
-<span class="tag">#{label}</span>
+<span class="tag">#{shown}</span>
 
 <style>
   .tag {

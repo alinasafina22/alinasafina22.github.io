@@ -5,18 +5,21 @@
  * Plain HTML/CSS bars; a tiny script switches the year.
  */
 import type { ShelfItem } from '../utils/shelves';
+import { booksCount, monthNames, toLocale, useTranslations } from '../i18n/ui';
 
 interface Props {
   items: ShelfItem[];
 }
 const { items } = Astro.props;
+const locale = toLocale(Astro.currentLocale);
+const t = useTranslations(locale);
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const MONTHS_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const MONTHS = monthNames(locale, 'short').map((m) => m.slice(0, 3));
+const MONTHS_LONG = monthNames(locale, 'long');
 
 const finished = items
   .filter((i) => i.status.key === 'read')
-  .map((i) => ({ item: i, date: i.dates.find((d) => d.label === 'Finished')?.date }))
+  .map((i) => ({ item: i, date: i.dates.find((d) => d.key === 'finished')?.date }))
   .filter((x): x is { item: ShelfItem; date: Date } => Boolean(x.date));
 
 const byYear = new Map<number, { item: ShelfItem; date: Date }[][]>();
@@ -36,29 +39,29 @@ const currentYear = years.includes(thisYear) ? thisYear : years[0];
 const readingNow = items.filter((i) => i.status.key === 'reading').length;
 const wantToRead = items.filter((i) => i.status.key === 'want-to-read').length;
 const thisYearTotal = byYear.get(thisYear)?.flat().length ?? 0;
-const plural = (n: number) => (n === 1 ? 'book' : 'books');
+
 ---
 
 {
   years.length > 0 && (
     <section class="stats" aria-labelledby="stats-title" data-stats>
-      <h2 id="stats-title" class="visually-hidden">Reading stats</h2>
+      <h2 id="stats-title" class="visually-hidden">{t('stats.title')}</h2>
 
       <dl class="tiles">
         <div class="tile">
-          <dt class="meta">read in {thisYear}</dt>
+          <dt class="meta">{t('stats.readIn', { year: thisYear })}</dt>
           <dd>{thisYearTotal}</dd>
         </div>
         <div class="tile">
-          <dt class="meta">reading now</dt>
+          <dt class="meta">{t('stats.readingNow')}</dt>
           <dd>{readingNow}</dd>
         </div>
         <div class="tile">
-          <dt class="meta">want to read</dt>
+          <dt class="meta">{t('stats.wantToRead')}</dt>
           <dd>{wantToRead}</dd>
         </div>
         <div class="tile">
-          <dt class="meta">read since {years[years.length - 1]}</dt>
+          <dt class="meta">{t('stats.readSince', { year: years[years.length - 1] })}</dt>
           <dd>{finished.length}</dd>
         </div>
       </dl>
@@ -66,8 +69,8 @@ const plural = (n: number) => (n === 1 ? 'book' : 'books');
       <div class="charts">
         <figure class="chart months-chart">
           <figcaption>
-            <span class="chart-title">Books per month</span>
-            <span class="year-chips" role="group" aria-label="Year">
+            <span class="chart-title">{t('stats.perMonth')}</span>
+            <span class="year-chips" role="group" aria-label={t('stats.year')}>
               {years.map((y) => (
                 <button type="button" class="chip year-chip" data-year={String(y)} aria-pressed={y === currentYear ? "true" : "false"}>
                   {y}
@@ -86,7 +89,7 @@ const plural = (n: number) => (n === 1 ? 'book' : 'books');
                     <button
                       type="button"
                       class="bar-hit"
-                      aria-label={`${MONTHS_LONG[m]} ${y}: ${list.length} ${plural(list.length)}`}
+                      aria-label={`${MONTHS_LONG[m]} ${y}: ${booksCount(locale, list.length)}`}
                       disabled={list.length === 0}
                     >
                       {list.length > 0 && list.length === peak && <span class="peak">{list.length}</span>}
@@ -94,14 +97,14 @@ const plural = (n: number) => (n === 1 ? 'book' : 'books');
                       {list.length > 0 && (
                         <span class="tip" role="tooltip">
                           <strong>
-                            {MONTHS_LONG[m]} · {list.length} {plural(list.length)}
+                            {MONTHS_LONG[m]} · {booksCount(locale, list.length)}
                           </strong>
                           {list.slice(0, 6).map((f) => (
                             <span class="tip-book" lang={f.item.lang}>
                               {f.item.title}
                             </span>
                           ))}
-                          {list.length > 6 && <span class="tip-more">+ {list.length - 6} more</span>}
+                          {list.length > 6 && <span class="tip-more">{t('stats.more', { n: list.length - 6 })}</span>}
                         </span>
                       )}
                     </button>
@@ -117,7 +120,7 @@ const plural = (n: number) => (n === 1 ? 'book' : 'books');
 
         <figure class="chart years-chart">
           <figcaption>
-            <span class="chart-title">Books per year</span>
+            <span class="chart-title">{t('stats.perYear')}</span>
           </figcaption>
           <ul class="hbars">
             {yearTotals.map(({ year, total }) => (
@@ -134,16 +137,16 @@ const plural = (n: number) => (n === 1 ? 'book' : 'books');
       </div>
 
       <details class="table-view">
-        <summary class="meta">Show as table</summary>
+        <summary class="meta">{t('stats.asTable')}</summary>
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th scope="col">Year</th>
+                <th scope="col">{t('stats.year')}</th>
                 {MONTHS.map((m) => (
                   <th scope="col">{m}</th>
                 ))}
-                <th scope="col">Total</th>
+                <th scope="col">{t('stats.total')}</th>
               </tr>
             </thead>
             <tbody>

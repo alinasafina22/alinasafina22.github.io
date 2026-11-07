@@ -1,18 +1,21 @@
 ---
-import { CATEGORIES, type CategoryKey } from '../utils/shelves';
+import { categoriesFor, type CategoryKey } from '../utils/shelves';
+import { localePath, toLocale, useTranslations } from '../i18n/ui';
 interface Props {
   current?: CategoryKey;
   counts?: Partial<Record<CategoryKey, number>>;
 }
 const { current, counts = {} } = Astro.props;
+const locale = toLocale(Astro.currentLocale);
+const t = useTranslations(locale);
 ---
 
-<nav aria-label="Bookshelf categories">
+<nav aria-label={t('shelves.categories')}>
   <ul class="chips tabs">
     {
-      CATEGORIES.map((c) => (
+      categoriesFor(locale).map((c) => (
         <li>
-          <a class="chip" href={`/bookshelves/${c.key}/`} aria-current={c.key === current ? 'page' : undefined}>
+          <a class="chip" href={localePath(locale, `/bookshelves/${c.key}/`)} aria-current={c.key === current ? 'page' : undefined}>
             {c.label}
             {counts[c.key] !== undefined && <span class="count">{counts[c.key]}</span>}
           </a>

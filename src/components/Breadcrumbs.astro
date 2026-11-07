@@ -3,9 +3,11 @@ interface Props {
   items: { href: string; label: string }[];
 }
 const { items } = Astro.props;
+import { toLocale, useTranslations } from '../i18n/ui';
+const t = useTranslations(toLocale(Astro.currentLocale));
 ---
 
-<nav class="crumbs" aria-label="Breadcrumbs">
+<nav class="crumbs" aria-label={t('breadcrumbs')}>
   <ol>
     {
       items.map((item) => (

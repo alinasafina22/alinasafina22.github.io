@@ -1,19 +1,21 @@
 ---
-import type { CollectionEntry } from 'astro:content';
 import DateLabel from './DateLabel.astro';
 import TagList from './TagList.astro';
-import { excerpt, noteTitle } from '../utils/format';
+import { excerpt, noteTitle, type Note } from '../utils/format';
+import { localePath, toLocale } from '../i18n/ui';
 
 interface Props {
-  note: CollectionEntry<'notes'>;
+  note: Note;
   compact?: boolean;
 }
 const { note, compact = false } = Astro.props;
-const title = noteTitle(note);
+const locale = toLocale(Astro.currentLocale);
+const title = noteTitle(note, locale);
+const href = localePath(locale, `/notes/${note.id}/`);
 const text = note.data.description ?? excerpt(note.body, compact ? 120 : 220);
 ---
 
-<article class:list={['note-card', { compact }]} lang={note.data.lang}>
+<article class:list={['note-card', { compact }]} lang={note.lang}>
   <div class="top">
     <DateLabel date={note.data.date} />
     {note.data.demo && <span class="demo-badge">demo</span>}
@@ -23,13 +25,13 @@ const text = note.data.description ?? excerpt(note.body, compact ? 120 : 220);
     note.data.title ? (
       <>
         <h3 class="title">
-          <a href={`/notes/${note.id}/`}>{title}</a>
+          <a href={href}>{title}</a>
         </h3>
         {text && <p class="excerpt">{text}</p>}
       </>
     ) : (
       <p class="untitled">
-        <a href={`/notes/${note.id}/`}>{text || title}</a>
+        <a href={href}>{text || title}</a>
       </p>
     )
   }

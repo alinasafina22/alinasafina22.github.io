@@ -151,6 +151,31 @@ const things = defineCollection({
     }),
 });
 
+/**
+ * Translations: src/content/translations/<locale>/<collection>/<id>.md
+ * Holds only the translated fields (title, author, description…) and the translated body.
+ * Everything else (status, rating, dates, tags) stays in the original file.
+ */
+const translations = defineCollection({
+  loader: md('translations'),
+  schema: z.object({
+    title: z.string(),
+    author: z.string(),
+    instructor: z.string(),
+    platform: z.string(),
+    description: z.string(),
+    subtitle: z.string(),
+    greeting: z.string(),
+    tagline: z.string(),
+    note: z.string(),
+    coverAlt: z.string(),
+    posterAlt: z.string(),
+    imageAlt: z.string(),
+    quotes: z.array(z.string()),
+    learned: z.array(z.string()),
+  }).partial(),
+});
+
 /** Editable copy for fixed pages: home, about, cv. */
 const pages = defineCollection({
   loader: md('pages'),
@@ -164,4 +189,4 @@ const pages = defineCollection({
   }),
 });
 
-export const collections = { notes, books, courses, movies, tvShows, things, pages };
+export const collections = { notes, books, courses, movies, tvShows, things, pages, translations };

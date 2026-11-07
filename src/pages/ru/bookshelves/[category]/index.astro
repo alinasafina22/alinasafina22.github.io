@@ -1,0 +1,10 @@
+---
+import View from '../../../../views/ShelfCategory.astro';
+import { categoryPaths } from '../../../../i18n/paths';
+
+export function getStaticPaths() {
+  return categoryPaths('ru');
+}
+---
+
+<View {...Astro.props} />

@@ -1,0 +1,279 @@
+---
+import { render } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import Cover from '../components/Cover.astro';
+import StatusBadge from '../components/StatusBadge.astro';
+import Rating from '../components/Rating.astro';
+import DateLabel from '../components/DateLabel.astro';
+import TagList from '../components/TagList.astro';
+import Doodle from '../components/Doodle.astro';
+import type { ShelfItem } from '../utils/shelves';
+import { hostOf } from '../utils/format';
+import { localePath, toLocale, useTranslations } from '../i18n/ui';
+
+interface Props {
+  item: ShelfItem;
+}
+
+const { item } = Astro.props;
+const locale = toLocale(Astro.currentLocale);
+const t = useTranslations(locale);
+const { Content } = await render(item.source);
+const hasBody = item.hasBody;
+const reviewHeading = item.category.key === 'courses' ? t('item.notes') : t('item.review');
+const cat = item.category;
+const named = item.creator ? t('item.by', { title: item.title, creator: item.creator }) : item.title;
+---
+
+<BaseLayout
+  title={item.title}
+  description={item.note ?? `${named}: ${item.status.label.toLowerCase()}.`}
+  image={item.cover?.src}
+  type="article"
+  lang={item.lang}
+>
+  <div class="container">
+    <Breadcrumbs
+      items={[
+        { href: localePath(locale, '/bookshelves/'), label: t('shelves.title') },
+        { href: localePath(locale, `/bookshelves/${cat.key}/`), label: cat.label },
+      ]}
+    />
+
+    <article class:list={['detail', cat.layout]}>
+      <div class="art">
+        <Cover
+          image={item.cover}
+          alt={item.coverAlt}
+          title={item.title}
+          creator={item.creator}
+          lang={item.lang}
+          shape={cat.layout === 'wide' ? 'wide' : 'portrait'}
+          sizes="(min-width: 640px) 280px, 70vw"
+          eager
+          doodle={cat.key === 'courses' ? 'computer' : cat.key === 'books' ? 'book' : 'star'}
+        />
+      </div>
+
+      <div class="info">
+        <p class="kind meta">{cat.singular}{item.demo && <span class="demo-badge">demo</span>}</p>
+        <h1 lang={item.lang}>{item.title}</h1>
+        {(item.creator || item.subline) && <p class="creator">{[item.creator, item.subline].filter(Boolean).join(' · ')}</p>}
+
+        <div class="badges">
+          <StatusBadge status={item.status} />
+          <Rating value={item.rating} size="large" />
+        </div>
+
+        {
+          item.dates.length > 0 && (
+            <ul class="dates">
+              {item.dates.map((d) => (
+                <li>
+                  <DateLabel date={d.date} prefix={t(`date.${d.key}`)} />
+                </li>
+              ))}
+            </ul>
+          )
+        }
+
+        {item.note && <p class="note">{item.note}</p>}
+
+        {
+          item.url && (
+            <p>
+              <a href={item.url} rel="noopener noreferrer" target="_blank" class="external">
+                {t('item.openOn', { host: hostOf(item.url) })} <span aria-hidden="true">↗</span>
+                <span class="visually-hidden">{t('newTab')}</span>
+              </a>
+            </p>
+          )
+        }
+
+        <TagList tags={item.tags} linkTo={localePath(locale, `/bookshelves/${cat.key}/?tag=`)} />
+      </div>
+    </article>
+
+    {
+      item.learned.length > 0 && (
+        <section class="block" aria-labelledby="learned">
+          <h2 id="learned">{t('item.learned')}</h2>
+          <ul class="learned">
+            {item.learned.map((l) => (
+              <li>
+                <Doodle name="sparkle" size={14} fill="var(--color-butter)" />
+                <span>{l}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    {
+      item.quotes.length > 0 && (
+        <section class="block" aria-labelledby="quotes">
+          <h2 id="quotes">{t('item.quotes')}</h2>
+          <div class="quotes">
+            {item.quotes.map((q) => (
+              <blockquote lang={item.lang}>{q}</blockquote>
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    {
+      hasBody && (
+        <section class="block" aria-labelledby="review">
+          <h2 id="review">{reviewHeading}</h2>
+          {item.bodyLang !== locale && <p class="meta original">{t('item.originalLang', { lang: t(`lang.name.${item.bodyLang}`) })}</p>}
+          <div class="prose" lang={item.bodyLang}>
+            <Content />
+          </div>
+        </section>
+      )
+    }
+  </div>
+</BaseLayout>
+
+<style>
+  .detail {
+    display: grid;
+    gap: var(--space-8);
+    padding-top: var(--space-8);
+  }
+
+  .art {
+    width: min(70vw, 260px);
+  }
+
+  .wide .art {
+    width: min(100%, 420px);
+  }
+
+  @media (min-width: 640px) {
+    .detail {
+      grid-template-columns: 240px 1fr;
+      align-items: start;
+      gap: var(--space-12);
+    }
+
+    .detail.wide {
+      grid-template-columns: 320px 1fr;
+    }
+
+    .art,
+    .wide .art {
+      width: 100%;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .detail {
+      grid-template-columns: 280px minmax(0, var(--width-reading));
+    }
+  }
+
+  .info {
+    display: grid;
+    gap: var(--space-4);
+    align-content: start;
+    min-width: 0;
+  }
+
+  .info > * {
+    margin: 0;
+  }
+
+  .kind {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    text-transform: lowercase;
+  }
+
+  h1 {
+    margin: 0;
+  }
+
+  .creator {
+    font-size: 18px;
+    color: var(--color-muted);
+    margin-top: calc(-1 * var(--space-2));
+  }
+
+  .badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .dates {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-6);
+  }
+
+  .note {
+    font-size: 18px;
+    line-height: 1.55;
+    padding-left: var(--space-4);
+    border-left: 3px solid var(--color-peach);
+  }
+
+  .block {
+    max-width: var(--width-reading);
+    margin-top: var(--space-12);
+  }
+
+  @media (min-width: 640px) {
+    .block {
+      margin-left: calc(240px + var(--space-12));
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .block {
+      margin-left: calc(280px + var(--space-12));
+    }
+  }
+
+  .learned {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .learned li {
+    display: grid;
+    grid-template-columns: 14px 1fr;
+    gap: var(--space-3);
+    align-items: baseline;
+  }
+
+  .quotes {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  blockquote {
+    margin: 0;
+    padding: var(--space-4) var(--space-6);
+    border-radius: var(--radius-card);
+    background: var(--color-oat);
+    font-family: var(--font-display);
+    font-size: 18px;
+    line-height: 1.45;
+  }
+
+  .external {
+    font-weight: 500;
+  }
+</style>

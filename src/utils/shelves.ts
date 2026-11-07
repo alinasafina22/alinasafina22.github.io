@@ -1,5 +1,7 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import type { ImageMetadata } from 'astro';
+import { localize } from '../i18n/content';
+import { useTranslations, type Locale } from '../i18n/ui';
 
 /*
  * Bookshelves: four independent collections shown through one shared interface.
@@ -99,13 +101,61 @@ export const ALL_CATEGORIES: CategoryDef[] = [
   },
 ];
 
+/** Russian labels for categories and statuses. */
+const RU: Record<CategoryKey, Pick<CategoryDef, 'label' | 'singular' | 'description' | 'emptyText'> & { statuses: Record<string, string> }> = {
+  books: {
+    label: 'Книги',
+    singular: 'Книга',
+    description: 'Бумажные, электронные и аудио. Всё, у чего есть автор и страницы.',
+    emptyText: 'Маленькая пустая полка. Здесь появятся книги.',
+    statuses: { reading: 'Читаю', read: 'Прочитано', 'want-to-read': 'Хочу прочитать', dnf: 'Бросила' },
+  },
+  courses: {
+    label: 'Курсы',
+    singular: 'Курс',
+    description: 'Курсы, туториалы и другое структурированное обучение.',
+    emptyText: 'Курсов пока нет. Наверное, учусь.',
+    statuses: { learning: 'Прохожу', completed: 'Пройден', 'want-to-take': 'Хочу пройти', paused: 'На паузе', dropped: 'Бросила' },
+  },
+  movies: {
+    label: 'Фильмы',
+    singular: 'Фильм',
+    description: 'Фильмы, которые я посмотрела или всё собираюсь посмотреть.',
+    emptyText: 'Фильмов пока нет. Попкорн готов.',
+    statuses: { watched: 'Посмотрела', 'want-to-watch': 'Хочу посмотреть' },
+  },
+  'tv-shows': {
+    label: 'Сериалы',
+    singular: 'Сериал',
+    description: 'Сериалы, на один сезон или на десять.',
+    emptyText: 'Сериалов пока нет. Пульт ждёт.',
+    statuses: { watching: 'Смотрю', finished: 'Досмотрела', 'want-to-watch': 'Хочу посмотреть', 'on-hold': 'На паузе', dropped: 'Бросила' },
+  },
+};
+
+/** A category with labels in the given language. */
+export function localizeCategory(cat: CategoryDef, locale: Locale): CategoryDef {
+  if (locale === 'en') return cat;
+  const ru = RU[cat.key];
+  return {
+    ...cat,
+    label: ru.label,
+    singular: ru.singular,
+    description: ru.description,
+    emptyText: ru.emptyText,
+    statuses: cat.statuses.map((s) => ({ ...s, label: ru.statuses[s.key] ?? s.label })),
+  };
+}
+
 /** Categories shown on the site. */
 export const CATEGORIES = ALL_CATEGORIES.filter((c) => !c.hidden);
+
+export const categoriesFor = (locale: Locale) => CATEGORIES.map((c) => localizeCategory(c, locale));
 
 export const getCategory = (key: string) => ALL_CATEGORIES.find((c) => c.key === key);
 
 export interface DateRow {
-  label: string;
+  key: 'started' | 'finished' | 'completed' | 'watched';
   date: Date;
 }
 
@@ -127,91 +177,80 @@ export interface ShelfItem {
   dates: DateRow[];
   /** Date used for "recent" sorting. */
   sortDate: number;
-  lang: 'en' | 'ru';
+  /** Language of the shown title. */
+  lang: Locale;
+  /** Language of the shown review. */
+  bodyLang: Locale;
+  hasBody: boolean;
   demo: boolean;
   url?: string;
   quotes: string[];
   learned: string[];
-  entry: CollectionEntry<'books' | 'courses' | 'movies' | 'tvShows'>;
+  /** Pass to render() to show the review in the current language. */
+  source: CollectionEntry<'books' | 'courses' | 'movies' | 'tvShows' | 'translations'>;
 }
 
 const statusOf = (cat: CategoryDef, key: string) =>
   cat.statuses.find((s) => s.key === key) ?? cat.statuses[0];
 
-const datesOnly = (rows: Array<[string, Date | undefined]>): DateRow[] =>
-  rows.filter((r): r is [string, Date] => r[1] instanceof Date).map(([label, date]) => ({ label, date }));
+const datesOnly = (rows: Array<[DateRow['key'], Date | undefined]>): DateRow[] =>
+  rows.filter((r): r is [DateRow['key'], Date] => r[1] instanceof Date).map(([key, date]) => ({ key, date }));
 
 const latest = (updated: Date | undefined, dates: DateRow[]) =>
   Math.max(updated?.getTime() ?? 0, ...dates.map((d) => d.date.getTime()), 0);
 
-export async function getShelf(key: CategoryKey): Promise<ShelfItem[]> {
-  const cat = getCategory(key)!;
-  if (cat.hidden) return [];
-  const base = `/bookshelves/${key}/`;
-  let items: ShelfItem[] = [];
+export async function getShelf(key: CategoryKey, locale: Locale = 'en'): Promise<ShelfItem[]> {
+  const base = getCategory(key)!;
+  if (base.hidden) return [];
+  const cat = localizeCategory(base, locale);
+  const t = useTranslations(locale);
+  const href = (id: string) => `${locale === 'en' ? '' : `/${locale}`}/bookshelves/${key}/${id}/`;
+  const collection = cat.collection;
 
-  if (key === 'books') {
-    items = (await getCollection('books')).map((e) => {
-      const d = e.data;
-      const dates = datesOnly([
-        ['Started', d.startDate],
-        ['Finished', d.finishDate],
-      ]);
+  const entries = await getCollection(collection);
+  const items = await Promise.all(
+    entries.map(async (e): Promise<ShelfItem> => {
+      const l = await localize(e, locale);
+      const d = l.data as Record<string, any>;
+      let dates: DateRow[];
+      let creator: string | undefined;
+      let subline: string | undefined;
+      let cover: ImageMetadata | undefined = d.cover;
+      let coverAlt = d.coverAlt ?? t('item.coverOf', { title: d.title });
+      if (key === 'books') {
+        dates = datesOnly([['started', d.startDate], ['finished', d.finishDate]]);
+        creator = d.author;
+      } else if (key === 'courses') {
+        dates = datesOnly([['started', d.startDate], ['completed', d.completionDate]]);
+        creator = d.instructor;
+        subline = d.platform;
+      } else if (key === 'movies') {
+        dates = datesOnly([['watched', d.watchedDate]]);
+        creator = d.director;
+        subline = d.year ? String(d.year) : undefined;
+        cover = d.poster;
+        coverAlt = d.posterAlt ?? t('item.posterOf', { title: d.title });
+      } else {
+        dates = datesOnly([['started', d.startDate], ['finished', d.finishDate]]);
+        subline = [d.year ? String(d.year) : '', d.season ? t('item.season', { n: d.season }) : ''].filter(Boolean).join(' · ') || undefined;
+        cover = d.poster;
+        coverAlt = d.posterAlt ?? t('item.posterOf', { title: d.title });
+      }
       return {
-        category: cat, id: e.id, href: `${base}${e.id}/`, title: d.title, creator: d.author,
-        status: statusOf(cat, d.status), rating: d.rating, cover: d.cover,
-        coverAlt: d.coverAlt ?? `Cover of ${d.title}`, note: d.note, tags: d.tags, dates,
-        sortDate: latest(d.updated, dates), lang: d.lang, demo: d.demo, quotes: d.quotes, learned: [], entry: e,
+        category: cat, id: e.id, href: href(e.id), title: d.title, creator, subline,
+        status: statusOf(cat, d.status), rating: d.rating, cover, coverAlt, note: d.note, tags: d.tags,
+        dates, sortDate: latest(d.updated, dates), lang: l.lang, bodyLang: l.bodyLang,
+        hasBody: Boolean(l.body?.trim()), demo: d.demo, url: d.url, quotes: d.quotes ?? [], learned: d.learned ?? [],
+        source: l.source,
       };
-    });
-  } else if (key === 'courses') {
-    items = (await getCollection('courses')).map((e) => {
-      const d = e.data;
-      const dates = datesOnly([
-        ['Started', d.startDate],
-        ['Completed', d.completionDate],
-      ]);
-      return {
-        category: cat, id: e.id, href: `${base}${e.id}/`, title: d.title, creator: d.instructor,
-        subline: d.platform, status: statusOf(cat, d.status), rating: d.rating, cover: d.cover,
-        coverAlt: d.coverAlt ?? `Cover of ${d.title}`, note: d.note, tags: d.tags, dates,
-        sortDate: latest(d.updated, dates), lang: d.lang, demo: d.demo, url: d.url, quotes: [],
-        learned: d.learned, entry: e,
-      };
-    });
-  } else if (key === 'movies') {
-    items = (await getCollection('movies')).map((e) => {
-      const d = e.data;
-      const dates = datesOnly([['Watched', d.watchedDate]]);
-      return {
-        category: cat, id: e.id, href: `${base}${e.id}/`, title: d.title, creator: d.director,
-        subline: d.year ? String(d.year) : undefined, status: statusOf(cat, d.status), rating: d.rating,
-        cover: d.poster, coverAlt: d.posterAlt ?? `Poster of ${d.title}`, note: d.note, tags: d.tags,
-        dates, sortDate: latest(d.updated, dates), lang: d.lang, demo: d.demo, quotes: [], learned: [], entry: e,
-      };
-    });
-  } else {
-    items = (await getCollection('tvShows')).map((e) => {
-      const d = e.data;
-      const dates = datesOnly([
-        ['Started', d.startDate],
-        ['Finished', d.finishDate],
-      ]);
-      const sub = [d.year ? String(d.year) : '', d.season ? `Season ${d.season}` : ''].filter(Boolean).join(' · ');
-      return {
-        category: cat, id: e.id, href: `${base}${e.id}/`, title: d.title, subline: sub || undefined,
-        status: statusOf(cat, d.status), rating: d.rating, cover: d.poster,
-        coverAlt: d.posterAlt ?? `Poster of ${d.title}`, note: d.note, tags: d.tags, dates,
-        sortDate: latest(d.updated, dates), lang: d.lang, demo: d.demo, quotes: [], learned: [], entry: e,
-      };
-    });
-  }
+    }),
+  );
 
   // Default order: most recently touched first, then by title.
-  return items.sort((a, b) => b.sortDate - a.sortDate || a.title.localeCompare(b.title));
+  return items.sort((a, b) => b.sortDate - a.sortDate || a.title.localeCompare(b.title, locale));
 }
 
-export async function getAllShelves() {
-  const entries = await Promise.all(ALL_CATEGORIES.map(async (c) => [c.key, await getShelf(c.key)] as const));
+export async function getAllShelves(locale: Locale = 'en') {
+  const entries = await Promise.all(ALL_CATEGORIES.map(async (c) => [c.key, await getShelf(c.key, locale)] as const));
   return Object.fromEntries(entries) as Record<CategoryKey, ShelfItem[]>;
 }

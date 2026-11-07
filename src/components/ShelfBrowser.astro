@@ -7,12 +7,15 @@ import MediaCard from './MediaCard.astro';
 import CourseCard from './CourseCard.astro';
 import EmptyState from './EmptyState.astro';
 import type { CategoryDef, ShelfItem } from '../utils/shelves';
+import { monthNames, tagLabel, toLocale, useTranslations } from '../i18n/ui';
 
 interface Props {
   category: CategoryDef;
   items: ShelfItem[];
 }
 const { category, items } = Astro.props;
+const locale = toLocale(Astro.currentLocale);
+const t = useTranslations(locale);
 const countFor = (key: string) => items.filter((i) => i.status.key === key).length;
 const label = category.label.toLowerCase();
 
@@ -31,11 +34,15 @@ const groupOf = (item: ShelfItem): string => {
   if (item.status.key.startsWith('want-')) return 'later';
   return item.sortDate > 0 ? String(new Date(item.sortDate).getUTCFullYear()) : 'undated';
 };
-const NOW_LABEL: Record<string, string> = { books: 'Reading now', courses: 'Learning now', 'tv-shows': 'Watching now' };
+const NOW_LABEL: Record<string, string> = {
+  books: t('shelves.now.books'),
+  courses: t('shelves.now.courses'),
+  'tv-shows': t('shelves.now.tv-shows'),
+};
 const groupLabel = (key: string) =>
-  key === 'now' ? (NOW_LABEL[category.key] ?? 'In progress')
+  key === 'now' ? (NOW_LABEL[category.key] ?? t('shelves.inProgress'))
   : key === 'later' ? (category.statuses.find((st) => st.key.startsWith('want-'))?.label ?? 'Later')
-  : key === 'undated' ? 'Earlier'
+  : key === 'undated' ? t('shelves.earlier')
   : key;
 const rank = (key: string) => (key === 'now' ? 1e9 : key === 'later' ? -2 : key === 'undated' ? -1 : Number(key));
 const groupMap = new Map<string, ShelfItem[]>();
@@ -46,7 +53,7 @@ for (const item of items) {
 const groups = [...groupMap.entries()].sort((a, b) => rank(b[0]) - rank(a[0]));
 
 /* Inside a year, split by month (newest first). Other blocks stay as one list. */
-const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const MONTHS = monthNames(locale, 'long');
 const monthsOf = (key: string, groupItems: ShelfItem[]): Array<[string, ShelfItem[]]> => {
   if (!/^\d{4}$/.test(key)) return [['', groupItems]];
   const byMonth = new Map<number, ShelfItem[]>();
@@ -58,13 +65,13 @@ const monthsOf = (key: string, groupItems: ShelfItem[]): Array<[string, ShelfIte
 };
 ---
 
-<div class="browser" data-shelf>
+<div class="browser" data-shelf data-shown-template={t('shelves.shown', { n: '{n}' })}>
   {
     items.length > 0 && (
       <div class="controls">
-        <div class="chips" role="group" aria-label="Filter by status">
+        <div class="chips" role="group" aria-label={t('shelves.filterStatus')}>
           <button type="button" class="chip" data-filter="all" aria-pressed="true">
-            All <span class="count">{items.length}</span>
+            {t('shelves.all.status')} <span class="count">{items.length}</span>
           </button>
           {category.statuses.map((s) => (
             <button type="button" class="chip" data-filter={s.key} aria-pressed="false" disabled={countFor(s.key) === 0}>
@@ -73,32 +80,32 @@ const monthsOf = (key: string, groupItems: ShelfItem[]): Array<[string, ShelfIte
           ))}
         </div>
         {allTags.length > 0 && (
-          <div class="chips tag-chips" role="group" aria-label="Filter by tag">
+          <div class="chips tag-chips" role="group" aria-label={t('shelves.filterTag')}>
             <button type="button" class="chip tag-chip" data-tag="" aria-pressed="true">
-              All tags
+              {t('shelves.allTags')}
             </button>
-            {allTags.map(([t, n]) => (
-              <button type="button" class="chip tag-chip" data-tag={t} aria-pressed="false">
-                #{t} <span class="count">{n}</span>
+            {allTags.map(([tag, n]) => (
+              <button type="button" class="chip tag-chip" data-tag={tag} aria-pressed="false">
+                #{tagLabel(tag, locale)} <span class="count">{n}</span>
               </button>
             ))}
           </div>
         )}
         <div class="tools">
           <label class="search">
-            <span class="visually-hidden">Search {label}</span>
+            <span class="visually-hidden">{t('shelves.search', { what: label }).replace('…', '')}</span>
             <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
               <circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="1.8" />
               <path d="M13 13l4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
             </svg>
-            <input type="search" placeholder={`Search ${label}…`} data-search autocomplete="off" />
+            <input type="search" placeholder={t('shelves.search', { what: label })} data-search autocomplete="off" />
           </label>
           <label class="sort">
-            <span class="meta">sort</span>
+            <span class="meta">{t('shelves.sort')}</span>
             <select data-sort>
-              <option value="recent">Recently updated</option>
-              <option value="title">Title A–Z</option>
-              <option value="rating">Rating</option>
+              <option value="recent">{t('shelves.sort.recent')}</option>
+              <option value="title">{t('shelves.sort.title')}</option>
+              <option value="rating">{t('shelves.sort.rating')}</option>
             </select>
           </label>
         </div>
@@ -108,7 +115,7 @@ const monthsOf = (key: string, groupItems: ShelfItem[]): Array<[string, ShelfIte
 
   {
     items.length === 0 ? (
-      <EmptyState text={category.emptyText} hint={`Add a Markdown file to src/content/${category.collection === 'tvShows' ? 'tv-shows' : category.key}/`} />
+      <EmptyState text={category.emptyText} hint={t('shelves.addFile', { folder: category.collection === 'tvShows' ? 'tv-shows' : category.key })} />
     ) : (
       <>
         {groups.map(([key, groupItems], gi) => (
@@ -125,7 +132,7 @@ const monthsOf = (key: string, groupItems: ShelfItem[]): Array<[string, ShelfIte
                     <li
                       data-status={item.status.key}
                       data-title={item.title.toLowerCase()}
-                      data-search-text={[item.title, item.creator, item.subline, ...item.tags].filter(Boolean).join(' ').toLowerCase()}
+                      data-search-text={[item.title, item.creator, item.subline, ...item.tags, ...item.tags.map((tag) => tagLabel(tag, locale))].filter(Boolean).join(' ').toLowerCase()}
                       data-rating={item.rating ?? 0}
                       data-tags={`|${item.tags.join('|')}|`}
                       data-order={i}
@@ -140,7 +147,7 @@ const monthsOf = (key: string, groupItems: ShelfItem[]): Array<[string, ShelfIte
         ))}
         <p class="live visually-hidden" aria-live="polite" data-live />
         <div class="no-results" data-empty hidden>
-          <EmptyState text="Nothing on this shelf matches." hint="Try another status or a shorter search." />
+          <EmptyState text={t('shelves.noMatch')} hint={t('shelves.noMatchHint')} />
         </div>
       </>
     )
@@ -179,7 +186,7 @@ const monthsOf = (key: string, groupItems: ShelfItem[]): Array<[string, ShelfIte
       buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.filter === status)));
       tagButtons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.tag === tag)));
       if (empty) empty.hidden = shown > 0;
-      if (live) live.textContent = `${shown} shown`;
+      if (live) live.textContent = (root.dataset.shownTemplate ?? '{n}').replace('{n}', String(shown));
 
       const mode = sort?.value ?? 'recent';
       for (const section of sections) {
@@ -191,7 +198,7 @@ const monthsOf = (key: string, groupItems: ShelfItem[]): Array<[string, ShelfIte
           month.hidden = shownHere === 0;
           visible += shownHere;
           own.sort((a, b) => {
-            if (mode === 'title') return (a.dataset.title ?? '').localeCompare(b.dataset.title ?? '');
+            if (mode === 'title') return (a.dataset.title ?? '').localeCompare(b.dataset.title ?? '', document.documentElement.lang);
             if (mode === 'rating') return Number(b.dataset.rating) - Number(a.dataset.rating) || Number(a.dataset.order) - Number(b.dataset.order);
             return Number(a.dataset.order) - Number(b.dataset.order);
           });

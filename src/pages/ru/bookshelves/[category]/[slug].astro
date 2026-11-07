@@ -1,0 +1,10 @@
+---
+import View from '../../../../views/ShelfItemPage.astro';
+import { shelfItemPaths } from '../../../../i18n/paths';
+
+export function getStaticPaths() {
+  return shelfItemPaths('ru');
+}
+---
+
+<View {...Astro.props} />
