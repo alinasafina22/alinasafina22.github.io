@@ -106,8 +106,8 @@ p {
 }
 
 /* Code colors follow the theme: Shiki emits both palettes as CSS variables. */
-:root[data-theme='dark'] .astro-code,
-:root[data-theme='dark'] .astro-code span {
+:root:is([data-theme='dark'], [data-theme='burgundy']) .astro-code,
+:root:is([data-theme='dark'], [data-theme='burgundy']) .astro-code span {
   color: var(--shiki-dark) !important;
   background-color: var(--shiki-dark-bg) !important;
 }
