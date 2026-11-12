@@ -102,8 +102,6 @@ const named = item.creator ? t('item.by', { title: item.title, creator: item.cre
         }
 
         <TagList tags={item.tags} linkTo={localePath(locale, `/bookshelves/${cat.key}/?tag=`)} />
-      </div>
-    </article>
 
     {
       item.summary && (
@@ -154,6 +152,8 @@ const named = item.creator ? t('item.by', { title: item.title, creator: item.cre
         </section>
       )
     }
+      </div>
+    </article>
   </div>
 </BaseLayout>
 
@@ -252,21 +252,14 @@ const named = item.creator ? t('item.by', { title: item.title, creator: item.cre
     border-left: 3px solid var(--color-peach);
   }
 
+  /* Description, quotes and review sit in the right column, right under the tags. */
   .block {
     max-width: var(--width-reading);
-    margin-top: var(--space-12);
+    margin-top: var(--space-8);
   }
 
-  @media (min-width: 640px) {
-    .block {
-      margin-left: calc(240px + var(--space-12));
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .block {
-      margin-left: calc(280px + var(--space-12));
-    }
+  .block h2 {
+    margin: 0 0 var(--space-3);
   }
 
   .learned {
