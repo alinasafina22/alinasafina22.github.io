@@ -61,6 +61,8 @@ const books = defineCollection({
       rating,
       startDate: flexDate.optional(),
       finishDate: flexDate.optional(),
+      /** Short neutral description of the book (not a review), so it's easy to remember what it was about. */
+      summary: z.string().optional(),
       /** Year this book is planned for, e.g. 2027. Planned want-to-read books get their own block on the shelf. */
       plan: z.number().int().min(2000).max(2100).optional(),
       note: z.string().optional(),
@@ -198,6 +200,7 @@ const translations = defineCollection({
     greeting: z.string(),
     tagline: z.string(),
     note: z.string(),
+    summary: z.string(),
     coverAlt: z.string(),
     posterAlt: z.string(),
     imageAlt: z.string(),

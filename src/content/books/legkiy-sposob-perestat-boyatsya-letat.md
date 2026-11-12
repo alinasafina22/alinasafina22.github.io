@@ -6,4 +6,5 @@ cover: "./covers/legkiy-sposob-perestat-boyatsya-letat.jpg"
 status: read
 finishDate: 2024-09-15
 lang: ru
+summary: "Алексей Герваш объясняет, откуда берётся страх полётов, как устроена безопасность авиации и какие техники помогают справляться с паникой до и во время перелёта."
 ---

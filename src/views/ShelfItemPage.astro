@@ -28,7 +28,7 @@ const named = item.creator ? t('item.by', { title: item.title, creator: item.cre
 
 <BaseLayout
   title={item.title}
-  description={item.note ?? `${named}: ${item.status.label.toLowerCase()}.`}
+  description={item.note ?? item.summary ?? `${named}: ${item.status.label.toLowerCase()}.`}
   image={item.cover?.src}
   type="article"
   lang={item.lang}
@@ -106,6 +106,15 @@ const named = item.creator ? t('item.by', { title: item.title, creator: item.cre
     </article>
 
     {
+      item.summary && (
+        <section class="block" aria-labelledby="about">
+          <h2 id="about">{t('item.about')}</h2>
+          <p class="summary" lang={item.lang}>{item.summary}</p>
+        </section>
+      )
+    }
+
+    {
       item.learned.length > 0 && (
         <section class="block" aria-labelledby="learned">
           <h2 id="learned">{t('item.learned')}</h2>
@@ -149,6 +158,13 @@ const named = item.creator ? t('item.by', { title: item.title, creator: item.cre
 </BaseLayout>
 
 <style>
+  .summary {
+    max-width: var(--width-reading);
+    margin: 0;
+    font-size: 17px;
+    line-height: 1.65;
+  }
+
   .detail {
     display: grid;
     gap: var(--space-8);
