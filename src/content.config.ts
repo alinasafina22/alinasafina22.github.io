@@ -154,6 +154,32 @@ const things = defineCollection({
 });
 
 /**
+ * Recipes: ingredients (optionally in groups) and steps live in the frontmatter,
+ * the Markdown body is an optional story or tips.
+ */
+const ingredientGroups = z.array(z.object({ group: z.string().optional(), items: z.array(z.string()) }));
+const recipes = defineCollection({
+  loader: md('recipes'),
+  schema: ({ image }) =>
+    z.object({
+      title: z.string(),
+      description: z.string().optional(),
+      image: image().optional(),
+      imageAlt: z.string().optional(),
+      date: z.coerce.date(),
+      /** Free text: "8 servings", "1 cake". */
+      servings: z.string().optional(),
+      /** Free text: "2 hours". */
+      time: z.string().optional(),
+      ingredients: ingredientGroups.default([]),
+      steps: z.array(z.string()).default([]),
+      tags,
+      lang,
+      demo,
+    }),
+});
+
+/**
  * Translations: src/content/translations/<locale>/<collection>/<id>.md
  * Holds only the translated fields (title, author, description…) and the translated body.
  * Everything else (status, rating, dates, tags) stays in the original file.
@@ -175,6 +201,10 @@ const translations = defineCollection({
     imageAlt: z.string(),
     quotes: z.array(z.string()),
     learned: z.array(z.string()),
+    servings: z.string(),
+    time: z.string(),
+    ingredients: ingredientGroups,
+    steps: z.array(z.string()),
   }).partial(),
 });
 
@@ -191,4 +221,4 @@ const pages = defineCollection({
   }),
 });
 
-export const collections = { notes, books, courses, movies, tvShows, things, pages, translations };
+export const collections = { notes, books, courses, movies, tvShows, things, recipes, pages, translations };

@@ -21,6 +21,11 @@ export async function thingPaths(locale: Locale) {
   return things.map((thing) => ({ params: { slug: thing.id }, props: { thing } }));
 }
 
+export async function recipePaths(locale: Locale) {
+  const recipes = await localizeAll(await getCollection('recipes'), locale);
+  return recipes.map((recipe) => ({ params: { slug: recipe.id }, props: { recipe } }));
+}
+
 export function categoryPaths(locale: Locale) {
   return categoriesFor(locale).map((category) => ({ params: { category: category.key }, props: { category } }));
 }
