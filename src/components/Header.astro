@@ -94,7 +94,7 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
 <script>
   // Theme switch: cycle light → graphite → burgundy, remember the choice.
   const THEMES = ['light', 'dark', 'burgundy'] as const;
-  const COLORS: Record<string, string> = { light: '#f5f1e8', dark: '#2b2c29', burgundy: '#4a2a30' };
+  const COLORS: Record<string, string> = { light: '#f5f1e8', dark: '#2b2c29', burgundy: '#3a1d23' };
   const root = document.documentElement;
   const toggle = document.querySelector<HTMLButtonElement>('[data-theme-toggle]');
   const labels: Record<string, string> = JSON.parse(toggle?.dataset.labels ?? '{}');
