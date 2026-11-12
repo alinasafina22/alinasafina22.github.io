@@ -1,5 +1,5 @@
 ---
-title: "Nanay's Anthill Cake"
+title: "Grandma's Anthill Cake"
 description: "The classic “anthill”: crumbly baked dough mixed with dulce de leche from boiled condensed milk."
 ingredients:
   - group: "Dough"
