@@ -364,6 +364,7 @@ const TAGS: Record<string, Record<Locale, string>> = {
   'комиксы': { en: 'comics', ru: 'комиксы' },
   'программирование': { en: 'programming', ru: 'программирование' },
   'математика': { en: 'maths', ru: 'математика' },
+  'поэзия': { en: 'poetry', ru: 'поэзия' },
   'десерт': { en: 'dessert', ru: 'десерт' },
   'завтрак': { en: 'breakfast', ru: 'завтрак' },
 };
