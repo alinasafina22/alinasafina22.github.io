@@ -65,7 +65,7 @@ quotes:
 
 ### Курс — `src/content/courses/`
 
-Поля: `title`, `instructor`, `platform`, `cover`, `status` (learning | completed | want-to-take | paused | dropped), `rating`, `startDate`, `completionDate`, `note`, `learned` (список), `url`, `certificate` (ссылка на сертификат — на странице курса появится кнопка «Сертификат ↗»). Текст файла — заметки по курсу.
+Поля: `title`, `instructor`, `platform`, `cover`, `status` (learning | completed | want-to-take | paused | dropped), `rating`, `startDate`, `completionDate`, `note`, `learned` (список), `url`, `certificate` (ссылка на сертификат или картинка в `public/certificates/`, путь вида `/certificates/kaggle-pandas.jpg` — на странице курса появится кнопка «Сертификат ↗»). Текст файла — заметки по курсу.
 
 ### Фильмы и сериалы (сейчас скрыты)
 

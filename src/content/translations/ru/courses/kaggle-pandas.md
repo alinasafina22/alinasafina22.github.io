@@ -1,0 +1,3 @@
+---
+coverAlt: "Сертификат Kaggle: Pandas"
+---
