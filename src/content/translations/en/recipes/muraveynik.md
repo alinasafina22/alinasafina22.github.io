@@ -18,7 +18,7 @@ steps:
   - "Add flour and knead a stiff dough, just a little softer than dumpling dough."
   - "Freeze the dough until it's hard."
   - "Grate the frozen dough straight onto a baking tray."
-  - "Bake until golden, then let it cool."
+  - "Bake each tray for 7 minutes in an oven preheated to 180 °C (350 °F), then let it cool."
   - "Boil the condensed milk in its closed can for 1 hour. Keep the can fully under water the whole time and only open it once it has cooled."
   - "Mix the crumbs with the caramelised condensed milk and pile it into a mound."
 ---
