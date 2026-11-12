@@ -1,9 +1,11 @@
 /*
  * azh. design tokens — the single source of truth for colors, type and spacing.
  * Components must use these variables instead of hardcoded values.
- * A dark theme can later be added by redefining the color tokens only.
+ * The dark theme redefines the color tokens only (see the end of this file).
  */
 :root {
+  color-scheme: light;
+
   /* Primary colors */
   --color-paper: #f5f1e8;
   --color-oat: #e7e0d3;
@@ -90,5 +92,54 @@
 @media (prefers-reduced-motion: reduce) {
   :root {
     --transition: 0ms;
+  }
+}
+
+/*
+ * Dark theme. The theme switch in the header sets data-theme on <html> and remembers the choice.
+ * Without a saved choice the site follows the system setting.
+ * Accents are muted so light text stays readable on them.
+ */
+:root[data-theme='dark'] {
+  --color-paper: #1d1f1c;
+  --color-oat: #2d302b;
+  --color-ink: #e9e5dc;
+  --color-muted: #a7a498;
+  --color-border: #3b3f39;
+
+  --color-sage: #3e4d3c;
+  --color-lavender: #4a4360;
+  --color-peach: #5c4639;
+  --color-dusty-rose: #c08f87;
+  --color-dusty-blue: #39495a;
+  --color-butter: #5e5733;
+
+  --color-card: #252823;
+  --color-sage-deep: #8ab384;
+  --color-focus: #8cbbe0;
+
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --color-paper: #1d1f1c;
+    --color-oat: #2d302b;
+    --color-ink: #e9e5dc;
+    --color-muted: #a7a498;
+    --color-border: #3b3f39;
+
+    --color-sage: #3e4d3c;
+    --color-lavender: #4a4360;
+    --color-peach: #5c4639;
+    --color-dusty-rose: #c08f87;
+    --color-dusty-blue: #39495a;
+    --color-butter: #5e5733;
+
+    --color-card: #252823;
+    --color-sage-deep: #8ab384;
+    --color-focus: #8cbbe0;
+
+    color-scheme: dark;
   }
 }

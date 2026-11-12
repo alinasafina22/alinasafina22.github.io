@@ -105,6 +105,13 @@ p {
   overflow-x: auto;
 }
 
+/* Code colors follow the theme: Shiki emits both palettes as CSS variables. */
+:root[data-theme='dark'] .astro-code,
+:root[data-theme='dark'] .astro-code span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+}
+
 .prose pre code {
   background: none;
   padding: 0;
