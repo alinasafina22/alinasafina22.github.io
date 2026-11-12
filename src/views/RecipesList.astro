@@ -1,0 +1,57 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import RecipeCard from '../components/RecipeCard.astro';
+import EmptyState from '../components/EmptyState.astro';
+import { localizeAll } from '../i18n/content';
+import { toLocale, useTranslations } from '../i18n/ui';
+
+const locale = toLocale(Astro.currentLocale);
+const t = useTranslations(locale);
+const recipes = (await localizeAll(await getCollection('recipes'), locale)).sort((a, b) =>
+  a.data.title.localeCompare(b.data.title, locale),
+);
+---
+
+<BaseLayout title={t('recipes.title')} description={t('recipes.meta')}>
+  <div class="container">
+    <PageHeader title={t('recipes.title')} description={t('recipes.lead')} doodle="cake" accent="var(--color-peach)" />
+    {
+      recipes.length ? (
+        <ul class="grid">
+          {recipes.map((r) => (
+            <li>
+              <RecipeCard recipe={r} />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <EmptyState text={t('recipes.empty')} hint={t('recipes.emptyHint')} />
+      )
+    }
+  </div>
+</BaseLayout>
+
+<style>
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+    margin: 0 0 var(--space-16);
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 640px) {
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+</style>

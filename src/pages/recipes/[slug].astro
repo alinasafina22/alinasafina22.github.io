@@ -1,0 +1,10 @@
+---
+import View from '../../views/RecipePage.astro';
+import { recipePaths } from '../../i18n/paths';
+
+export function getStaticPaths() {
+  return recipePaths('en');
+}
+---
+
+<View {...Astro.props} />

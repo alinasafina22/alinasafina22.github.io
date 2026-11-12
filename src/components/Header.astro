@@ -8,6 +8,7 @@ const NAV = [
   { href: '/notes/', label: t('nav.notes') },
   { href: '/bookshelves/', label: t('nav.bookshelves') },
   { href: '/things/', label: t('nav.things') },
+  { href: '/recipes/', label: t('nav.recipes') },
   { href: '/about/', label: t('nav.about') },
 ];
 
@@ -312,7 +313,7 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
     padding: 0 0 var(--space-3);
   }
 
-  @media (min-width: 640px) {
+  @media (min-width: 900px) {
     .menu-button {
       display: none;
     }
