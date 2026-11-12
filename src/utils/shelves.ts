@@ -173,6 +173,8 @@ export interface ShelfItem {
   cover?: ImageMetadata;
   coverAlt: string;
   note?: string;
+  /** Short description of what the book is about (books only). */
+  summary?: string;
   tags: string[];
   dates: DateRow[];
   /** Date used for "recent" sorting. */
@@ -242,7 +244,7 @@ export async function getShelf(key: CategoryKey, locale: Locale = 'en'): Promise
       }
       return {
         category: cat, id: e.id, href: href(e.id), title: d.title, creator, subline,
-        status: statusOf(cat, d.status), rating: d.rating, cover, coverAlt, note: d.note, tags: d.tags,
+        status: statusOf(cat, d.status), rating: d.rating, cover, coverAlt, note: d.note, summary: d.summary, tags: d.tags,
         dates, sortDate: latest(d.updated, dates), lang: l.lang, bodyLang: l.bodyLang,
         hasBody: Boolean(l.body?.trim()), plan: d.plan, demo: d.demo, url: d.url, certificate: d.certificate, quotes: d.quotes ?? [], learned: d.learned ?? [],
         source: l.source,
