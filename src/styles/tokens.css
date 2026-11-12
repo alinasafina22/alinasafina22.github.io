@@ -147,23 +147,23 @@
   }
 }
 
-/* Soft burgundy */
+/* Burgundy */
 :root[data-theme='burgundy'] {
-  --color-paper: #4a2a30;
-  --color-oat: #603a41;
-  --color-ink: #f8ece8;
-  --color-muted: #dabdb7;
-  --color-border: #764950;
+  --color-paper: #3a1d23;
+  --color-oat: #512d34;
+  --color-ink: #f7eae5;
+  --color-muted: #d2b4ae;
+  --color-border: #673b43;
 
-  --color-sage: #5f6955;
-  --color-lavender: #684d70;
-  --color-peach: #86524b;
-  --color-dusty-rose: #efb5ad;
-  --color-dusty-blue: #55566f;
-  --color-butter: #806b45;
+  --color-sage: #56604c;
+  --color-lavender: #5f4466;
+  --color-peach: #7c4842;
+  --color-dusty-rose: #e8aaa2;
+  --color-dusty-blue: #4b4c66;
+  --color-butter: #76623c;
 
-  --color-card: #553239;
-  --color-sage-deep: #a9cc9d;
+  --color-card: #45252b;
+  --color-sage-deep: #a6c99a;
   --color-focus: #9cc6ea;
 
   color-scheme: dark;
