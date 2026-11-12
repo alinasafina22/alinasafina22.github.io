@@ -355,6 +355,7 @@ const TAGS: Record<string, Record<Locale, string>> = {
   'программирование': { en: 'programming', ru: 'программирование' },
   'математика': { en: 'maths', ru: 'математика' },
   'десерт': { en: 'dessert', ru: 'десерт' },
+  'завтрак': { en: 'breakfast', ru: 'завтрак' },
 };
 
 export const tagLabel = (tag: string, locale: Locale) => TAGS[tag]?.[locale] ?? tag;
