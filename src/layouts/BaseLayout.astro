@@ -49,17 +49,18 @@ const ogImage = new URL(image, Astro.site);
     {LOCALES.map((l) => <link rel="alternate" hreflang={l} href={new URL(switchLocalePath(Astro.url.pathname, l), Astro.site)} />)}
     <link rel="alternate" hreflang="x-default" href={new URL(switchLocalePath(Astro.url.pathname, 'en'), Astro.site)} />
     {noindex && <meta name="robots" content="noindex" />}
-    <meta name="theme-color" content="#f5f1e8" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#1d1f1c" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f5f1e8" />
     <script is:inline>
       // Pick the theme before the first paint: saved choice, otherwise the system setting.
       (function () {
-        var saved;
+        var themes = { light: '#f5f1e8', dark: '#2b2c29', burgundy: '#4a2a30' };
+        var theme;
         try {
-          saved = localStorage.getItem('theme');
+          theme = localStorage.getItem('theme');
         } catch (e) {}
-        var dark = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
-        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        if (!themes[theme]) theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = theme;
+        document.querySelector('meta[name="theme-color"]').content = themes[theme];
       })();
     </script>
     <meta name="generator" content={Astro.generator} />

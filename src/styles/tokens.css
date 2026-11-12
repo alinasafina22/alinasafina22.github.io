@@ -96,25 +96,28 @@
 }
 
 /*
- * Dark theme. The theme switch in the header sets data-theme on <html> and remembers the choice.
- * Without a saved choice the site follows the system setting.
+ * Dark themes. The theme button in the header cycles light → graphite (data-theme="dark")
+ * → burgundy (data-theme="burgundy") and remembers the choice.
+ * Without a saved choice the site follows the system setting (dark system → graphite).
  * Accents are muted so light text stays readable on them.
  */
+
+/* Warm graphite */
 :root[data-theme='dark'] {
-  --color-paper: #1d1f1c;
-  --color-oat: #2d302b;
-  --color-ink: #e9e5dc;
-  --color-muted: #a7a498;
-  --color-border: #3b3f39;
+  --color-paper: #2b2c29;
+  --color-oat: #3d3f3a;
+  --color-ink: #ece8df;
+  --color-muted: #b3afa3;
+  --color-border: #4c4f49;
 
-  --color-sage: #3e4d3c;
-  --color-lavender: #4a4360;
-  --color-peach: #5c4639;
-  --color-dusty-rose: #c08f87;
-  --color-dusty-blue: #39495a;
-  --color-butter: #5e5733;
+  --color-sage: #4a5a47;
+  --color-lavender: #564e6c;
+  --color-peach: #6a5244;
+  --color-dusty-rose: #c99890;
+  --color-dusty-blue: #455668;
+  --color-butter: #6b643d;
 
-  --color-card: #252823;
+  --color-card: #343632;
   --color-sage-deep: #8ab384;
   --color-focus: #8cbbe0;
 
@@ -123,23 +126,45 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
-    --color-paper: #1d1f1c;
-    --color-oat: #2d302b;
-    --color-ink: #e9e5dc;
-    --color-muted: #a7a498;
-    --color-border: #3b3f39;
+    --color-paper: #2b2c29;
+    --color-oat: #3d3f3a;
+    --color-ink: #ece8df;
+    --color-muted: #b3afa3;
+    --color-border: #4c4f49;
 
-    --color-sage: #3e4d3c;
-    --color-lavender: #4a4360;
-    --color-peach: #5c4639;
-    --color-dusty-rose: #c08f87;
-    --color-dusty-blue: #39495a;
-    --color-butter: #5e5733;
+    --color-sage: #4a5a47;
+    --color-lavender: #564e6c;
+    --color-peach: #6a5244;
+    --color-dusty-rose: #c99890;
+    --color-dusty-blue: #455668;
+    --color-butter: #6b643d;
 
-    --color-card: #252823;
+    --color-card: #343632;
     --color-sage-deep: #8ab384;
     --color-focus: #8cbbe0;
 
     color-scheme: dark;
   }
+}
+
+/* Soft burgundy */
+:root[data-theme='burgundy'] {
+  --color-paper: #4a2a30;
+  --color-oat: #603a41;
+  --color-ink: #f8ece8;
+  --color-muted: #dabdb7;
+  --color-border: #764950;
+
+  --color-sage: #5f6955;
+  --color-lavender: #684d70;
+  --color-peach: #86524b;
+  --color-dusty-rose: #efb5ad;
+  --color-dusty-blue: #55566f;
+  --color-butter: #806b45;
+
+  --color-card: #553239;
+  --color-sage-deep: #a9cc9d;
+  --color-focus: #9cc6ea;
+
+  color-scheme: dark;
 }
