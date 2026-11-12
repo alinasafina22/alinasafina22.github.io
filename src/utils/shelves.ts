@@ -182,6 +182,8 @@ export interface ShelfItem {
   /** Language of the shown review. */
   bodyLang: Locale;
   hasBody: boolean;
+  /** Year the item is planned for (books only). */
+  plan?: number;
   demo: boolean;
   url?: string;
   quotes: string[];
@@ -240,7 +242,7 @@ export async function getShelf(key: CategoryKey, locale: Locale = 'en'): Promise
         category: cat, id: e.id, href: href(e.id), title: d.title, creator, subline,
         status: statusOf(cat, d.status), rating: d.rating, cover, coverAlt, note: d.note, tags: d.tags,
         dates, sortDate: latest(d.updated, dates), lang: l.lang, bodyLang: l.bodyLang,
-        hasBody: Boolean(l.body?.trim()), demo: d.demo, url: d.url, quotes: d.quotes ?? [], learned: d.learned ?? [],
+        hasBody: Boolean(l.body?.trim()), plan: d.plan, demo: d.demo, url: d.url, quotes: d.quotes ?? [], learned: d.learned ?? [],
         source: l.source,
       };
     }),

@@ -3,6 +3,7 @@ title: "Тайная история"
 author: "Донна Тартт"
 tags: ["детектив"]
 rating: 6
+cover: "./covers/taynaya-istoriya.jpg"
 status: read
 finishDate: 2026-03-20
 lang: ru

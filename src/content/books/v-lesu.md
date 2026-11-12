@@ -3,6 +3,7 @@ title: "В лесу"
 author: "Тана Френч"
 tags: ["детектив"]
 rating: 8
+cover: "./covers/v-lesu.jpg"
 status: read
 finishDate: 2026-10-08
 lang: ru

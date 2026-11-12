@@ -3,6 +3,7 @@ title: "Где сокрыта библиотека"
 author: "Изабель Ибаньез"
 tags: ["фэнтези"]
 rating: 9
+cover: "./covers/gde-sokryta-biblioteka.jpg"
 status: read
 finishDate: 2026-01-03
 lang: ru

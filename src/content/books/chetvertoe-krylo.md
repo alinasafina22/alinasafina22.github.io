@@ -3,6 +3,7 @@ title: "Четвертое крыло"
 author: "Ребекка Яррос"
 tags: ["фэнтези"]
 rating: 8
+cover: "./covers/chetvertoe-krylo.jpg"
 status: read
 finishDate: 2026-07-15
 lang: ru

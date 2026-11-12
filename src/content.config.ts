@@ -61,6 +61,8 @@ const books = defineCollection({
       rating,
       startDate: flexDate.optional(),
       finishDate: flexDate.optional(),
+      /** Year this book is planned for, e.g. 2027. Planned want-to-read books get their own block on the shelf. */
+      plan: z.number().int().min(2000).max(2100).optional(),
       note: z.string().optional(),
       quotes: z.array(z.string()).default([]),
       tags,

@@ -3,6 +3,7 @@ title: "Грозовой перевал"
 author: "Эмили Бронте"
 tags: ["классика"]
 rating: 9
+cover: "./covers/grozovoy-pereval.jpg"
 status: read
 finishDate: 2025-12-11
 lang: ru

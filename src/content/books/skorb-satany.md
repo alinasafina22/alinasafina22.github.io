@@ -2,6 +2,7 @@
 title: "Скорбь Сатаны"
 author: "Мария Корелли"
 tags: ["классика"]
+cover: "./covers/skorb-satany.jpg"
 status: reading
 updated: 2026-11-12
 quotes:

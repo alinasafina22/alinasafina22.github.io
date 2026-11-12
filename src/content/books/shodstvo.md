@@ -2,6 +2,7 @@
 title: "Сходство"
 author: "Тана Френч"
 tags: ["детектив"]
+cover: "./covers/shodstvo.jpg"
 status: read
 rating: 6
 finishDate: 2026-11-12

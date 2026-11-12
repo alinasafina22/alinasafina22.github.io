@@ -3,6 +3,7 @@ title: "Идеальный квартал"
 author: "Блейк Пирс"
 tags: ["детектив"]
 rating: 10
+cover: "./covers/idealnyy-kvartal.jpg"
 status: read
 finishDate: 2026-06-16
 lang: ru

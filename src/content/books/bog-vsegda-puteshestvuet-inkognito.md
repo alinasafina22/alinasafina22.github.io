@@ -3,6 +3,7 @@ title: "Бог всегда путешествует инкогнито"
 author: "Лоран Гунель"
 tags: ["проза"]
 rating: 5
+cover: "./covers/bog-vsegda-puteshestvuet-inkognito.jpg"
 status: read
 finishDate: 2026-07-09
 lang: ru

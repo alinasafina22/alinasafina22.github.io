@@ -25,13 +25,13 @@ for (const item of items) for (const t of item.tags) tagCounts.set(t, (tagCounts
 const allTags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 
 /*
- * Blocks: in-progress first, then finished items by year (newest first),
+ * Blocks: in-progress first, then yearly plans, then finished items by year (newest first),
  * then items without dates, then the wishlist.
  */
 const IN_PROGRESS = ['reading', 'learning', 'watching'];
 const groupOf = (item: ShelfItem): string => {
   if (IN_PROGRESS.includes(item.status.key)) return 'now';
-  if (item.status.key.startsWith('want-')) return 'later';
+  if (item.status.key.startsWith('want-')) return item.plan ? `plan-${item.plan}` : 'later';
   return item.sortDate > 0 ? String(new Date(item.sortDate).getUTCFullYear()) : 'undated';
 };
 const NOW_LABEL: Record<string, string> = {
@@ -39,12 +39,24 @@ const NOW_LABEL: Record<string, string> = {
   courses: t('shelves.now.courses'),
   'tv-shows': t('shelves.now.tv-shows'),
 };
+const planYear = (key: string) => (key.startsWith('plan-') ? Number(key.slice(5)) : undefined);
+/* Plan progress counts every book planned for that year, including ones already finished. */
+const planProgress = (year: number) => {
+  const planned = items.filter((i) => i.plan === year && i.status.key !== 'dnf');
+  return { done: planned.filter((i) => i.status.key === 'read').length, total: planned.length };
+};
 const groupLabel = (key: string) =>
-  key === 'now' ? (NOW_LABEL[category.key] ?? t('shelves.inProgress'))
+  planYear(key) ? t('shelves.plan', { year: planYear(key)! })
+  : key === 'now' ? (NOW_LABEL[category.key] ?? t('shelves.inProgress'))
   : key === 'later' ? (category.statuses.find((st) => st.key.startsWith('want-'))?.label ?? 'Later')
   : key === 'undated' ? t('shelves.earlier')
   : key;
-const rank = (key: string) => (key === 'now' ? 1e9 : key === 'later' ? -2 : key === 'undated' ? -1 : Number(key));
+const rank = (key: string) =>
+  key === 'now' ? 1e9
+  : planYear(key) ? 1e8 - planYear(key)!
+  : key === 'later' ? -2
+  : key === 'undated' ? -1
+  : Number(key);
 const groupMap = new Map<string, ShelfItem[]>();
 for (const item of items) {
   const key = groupOf(item);
@@ -124,6 +136,15 @@ const monthsOf = (key: string, groupItems: ShelfItem[]): Array<[string, ShelfIte
               {groupLabel(key)}
               <span class="group-count meta" data-group-count>{groupItems.length}</span>
             </h3>
+            {planYear(key) && (() => {
+              const p = planProgress(planYear(key)!);
+              return (
+                <p class="plan-progress meta">
+                  <span class="bar" aria-hidden="true"><span style={`width:${p.total ? (p.done / p.total) * 100 : 0}%`} /></span>
+                  {t('shelves.planProgress', { done: p.done, total: p.total })}
+                </p>
+              );
+            })()}
             {monthsOf(key, groupItems).map(([month, monthItems]) => (
               <div class="month" data-month>
                 {month && <h4 class="month-title meta">{month}</h4>}
@@ -410,6 +431,27 @@ const monthsOf = (key: string, groupItems: ShelfItem[]): Array<[string, ShelfIte
     flex: 1;
     height: 1px;
     background: var(--color-border);
+  }
+
+  .plan-progress {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin: calc(var(--space-6) * -1 + var(--space-2)) 0 var(--space-6);
+  }
+
+  .plan-progress .bar {
+    width: 160px;
+    height: 8px;
+    border-radius: var(--radius-pill);
+    background: var(--color-oat);
+    overflow: hidden;
+  }
+
+  .plan-progress .bar span {
+    display: block;
+    height: 100%;
+    background: var(--color-sage-deep);
   }
 
   .group-count {

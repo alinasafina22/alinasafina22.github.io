@@ -3,6 +3,7 @@ title: "Граф Монте-Кристо. Том 1"
 author: "Александр Дюма"
 tags: ["классика"]
 rating: 8
+cover: "./covers/graf-monte-kristo-tom-1.jpg"
 status: read
 finishDate: 2026-06
 lang: ru

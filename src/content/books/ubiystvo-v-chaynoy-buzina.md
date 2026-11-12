@@ -3,6 +3,7 @@ title: "Убийство в чайной «Бузина»"
 author: "Нэнси Уоррен"
 tags: ["детектив"]
 rating: 6
+cover: "./covers/ubiystvo-v-chaynoy-buzina.jpg"
 status: read
 finishDate: 2026-03-17
 lang: ru
