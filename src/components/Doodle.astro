@@ -3,7 +3,7 @@
  * Small original hand-drawn accents. Purely decorative: always hidden from assistive tech.
  * Lines are slightly wobbly on purpose.
  */
-export type DoodleName = 'star' | 'arrow' | 'flower' | 'book' | 'computer' | 'sparkle' | 'loop-arrow' | 'cup';
+export type DoodleName = 'star' | 'arrow' | 'flower' | 'book' | 'computer' | 'sparkle' | 'loop-arrow' | 'cup' | 'cake';
 
 interface Props {
   name: DoodleName;
@@ -80,6 +80,16 @@ const { name, size = 24, color = 'currentColor', fill = 'none', class: className
           <path fill={fill} d="M8.5 10.5c10.5-.6 20.6-.7 31-.2.6 6.5.6 13 .2 19.4-10.4.6-20.8.6-31.2.1-.4-6.4-.4-12.8 0-19.3Z" />
           <path d="M19 37.5c3.4-.4 6.8-.4 10.2 0M24 30v7.3" />
           <path d="M15 19.5l3 2.5-3 2.6M21.5 25h6" />
+        </>
+      )
+    }
+    {
+      name === 'cake' && (
+        <>
+          <path fill={fill} d="M8 38.5c-.4-5 0-9.6.8-13.6 9.6-1.4 20.6-1.4 30.6 0 .8 4 1 8.6.6 13.6-10.6 1-21.4 1-32 0Z" />
+          <path d="M9 31.4c3.2 2 6.4-1.8 9.6.2 3.2 2 6.4-1.8 9.6.2 3.2 2 6.6-1.8 10.4 0" />
+          <path d="M24 24.2c-.4-3.4.2-6.2 1.4-8.6" />
+          <path d="M25.6 15.4c-2.2-1.6-1.6-4.6.4-5.8 1.4 1.8 1.6 4.2-.4 5.8Z" />
         </>
       )
     }

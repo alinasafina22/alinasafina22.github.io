@@ -46,6 +46,7 @@ const en = {
   'nav.notes': 'Notes',
   'nav.bookshelves': 'Bookshelves',
   'nav.things': 'Things',
+  'nav.recipes': 'Recipes',
   'nav.about': 'About',
   'lang.switch': 'Language',
   'footer.made': 'made for myself, bit by bit',
@@ -94,6 +95,18 @@ const en = {
   'things.savedIn': '{title}, saved in Things.',
   'external': '(external link, opens in a new tab)',
   'newTab': '(opens in a new tab)',
+
+  'recipes.title': 'Recipes',
+  'recipes.meta': 'Family recipes and things I like to cook.',
+  'recipes.lead': 'Family recipes and things I like to cook.',
+  'recipes.empty': 'No recipes yet.',
+  'recipes.emptyHint': 'Add a Markdown file to src/content/recipes/',
+  'recipes.ingredients': 'Ingredients',
+  'recipes.steps': 'Method',
+  'recipes.servings': 'makes',
+  'recipes.time': 'time',
+  'recipes.story': 'Notes',
+  'recipes.tick': 'Tap an ingredient to tick it off.',
 
   'shelves.title': 'Bookshelves',
   'shelves.lead': "Things I've read and learned.",
@@ -177,6 +190,7 @@ const ru: Record<Key, string> = {
   'nav.notes': 'Заметки',
   'nav.bookshelves': 'Полки',
   'nav.things': 'Находки',
+  'nav.recipes': 'Рецепты',
   'nav.about': 'Обо мне',
   'lang.switch': 'Язык',
   'footer.made': 'делаю для себя, по чуть-чуть',
@@ -225,6 +239,18 @@ const ru: Record<Key, string> = {
   'things.savedIn': '{title}: сохранено в находках.',
   'external': '(внешняя ссылка, откроется в новой вкладке)',
   'newTab': '(откроется в новой вкладке)',
+
+  'recipes.title': 'Рецепты',
+  'recipes.meta': 'Семейные рецепты и то, что я люблю готовить.',
+  'recipes.lead': 'Семейные рецепты и то, что я люблю готовить.',
+  'recipes.empty': 'Рецептов пока нет.',
+  'recipes.emptyHint': 'Добавь Markdown-файл в src/content/recipes/',
+  'recipes.ingredients': 'Ингредиенты',
+  'recipes.steps': 'Приготовление',
+  'recipes.servings': 'выход',
+  'recipes.time': 'время',
+  'recipes.story': 'Заметки',
+  'recipes.tick': 'Нажми на ингредиент, чтобы отметить его.',
 
   'shelves.title': 'Полки',
   'shelves.lead': 'Что я прочитала и чему научилась.',
@@ -328,6 +354,7 @@ const TAGS: Record<string, Record<Locale, string>> = {
   'комиксы': { en: 'comics', ru: 'комиксы' },
   'программирование': { en: 'programming', ru: 'программирование' },
   'математика': { en: 'maths', ru: 'математика' },
+  'десерт': { en: 'dessert', ru: 'десерт' },
 };
 
 export const tagLabel = (tag: string, locale: Locale) => TAGS[tag]?.[locale] ?? tag;

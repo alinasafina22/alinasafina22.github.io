@@ -1,0 +1,117 @@
+---
+import { Image } from 'astro:assets';
+import Doodle from './Doodle.astro';
+import type { Localized } from '../i18n/content';
+import { localePath, toLocale, useTranslations } from '../i18n/ui';
+
+interface Props {
+  recipe: Localized<'recipes'>;
+}
+
+const { recipe } = Astro.props;
+const locale = toLocale(Astro.currentLocale);
+const t = useTranslations(locale);
+const d = recipe.data;
+const href = localePath(locale, `/recipes/${recipe.id}/`);
+
+// Without a photo, a colored plate with a doodle. Color is stable per recipe.
+const ACCENTS = ['peach', 'butter', 'dusty-rose', 'sage', 'lavender'];
+const hash = [...recipe.id].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
+const accent = ACCENTS[hash % ACCENTS.length];
+---
+
+<article class="recipe-card" lang={recipe.lang}>
+  <a href={href} class="media" tabindex="-1" aria-hidden="true">
+    {
+      d.image ? (
+        <Image src={d.image} alt="" widths={[400, 800]} sizes="(min-width: 1024px) 340px, (min-width: 640px) 45vw, 100vw" />
+      ) : (
+        <span class="plate" style={`--bg: var(--color-${accent})`}>
+          <Doodle name="cake" size={56} fill="var(--color-paper)" />
+        </span>
+      )
+    }
+  </a>
+  <div class="body">
+    <h2 class="title"><a href={href}>{d.title}</a></h2>
+    {d.description && <p class="description">{d.description}</p>}
+    {
+      (d.time || d.servings) && (
+        <p class="meta">
+          {d.time && <span>{t('recipes.time')}: {d.time}</span>}
+          {d.servings && <span>{t('recipes.servings')}: {d.servings}</span>}
+        </p>
+      )
+    }
+  </div>
+</article>
+
+<style>
+  .recipe-card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: var(--border);
+    border-radius: var(--radius-card);
+    background: var(--color-card);
+    transition: transform var(--transition);
+  }
+
+  .recipe-card:hover {
+    transform: translateY(-2px);
+  }
+
+  .media {
+    display: block;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+  }
+
+  .media :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .plate {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+  }
+
+  .body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-4) var(--space-6);
+  }
+
+  .title {
+    margin: 0;
+    font-size: var(--text-card);
+  }
+
+  .title a {
+    text-decoration: none;
+  }
+
+  .title a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--color-dusty-rose);
+  }
+
+  .description {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: var(--text-small);
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin: 0;
+  }
+</style>

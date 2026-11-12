@@ -1,0 +1,252 @@
+---
+import { render } from 'astro:content';
+import { Image } from 'astro:assets';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import TagList from '../components/TagList.astro';
+import Doodle from '../components/Doodle.astro';
+import type { Localized } from '../i18n/content';
+import { localePath, toLocale, useTranslations } from '../i18n/ui';
+
+interface Props {
+  recipe: Localized<'recipes'>;
+}
+
+const { recipe } = Astro.props;
+const locale = toLocale(Astro.currentLocale);
+const t = useTranslations(locale);
+const d = recipe.data;
+const { Content } = await render(recipe.source);
+const hasStory = Boolean(recipe.body?.trim());
+---
+
+<BaseLayout title={d.title} description={d.description ?? d.title} image={d.image?.src} lang={recipe.lang}>
+  <div class="container">
+    <Breadcrumbs items={[{ href: localePath(locale, '/recipes/'), label: t('recipes.title') }]} />
+
+    <article class="recipe">
+      <header class="head">
+        <h1>
+          {d.title}
+          <Doodle name="cake" size={34} fill="var(--color-peach)" class="mark" />
+        </h1>
+        {d.description && <p class="lead">{d.description}</p>}
+        {
+          (d.time || d.servings) && (
+            <p class="facts meta">
+              {d.time && <span>{t('recipes.time')}: {d.time}</span>}
+              {d.servings && <span>{t('recipes.servings')}: {d.servings}</span>}
+            </p>
+          )
+        }
+        <TagList tags={d.tags} />
+      </header>
+
+      {
+        d.image && (
+          <Image class="photo" src={d.image} alt={d.imageAlt ?? ''} widths={[640, 1120]} sizes="(min-width: 1120px) 1120px, 100vw" />
+        )
+      }
+
+      <div class="cols">
+        {
+          d.ingredients.length > 0 && (
+            <section class="ingredients" aria-labelledby="ingredients">
+              <h2 id="ingredients">{t('recipes.ingredients')}</h2>
+              {d.ingredients.map((g) => (
+                <div class="group">
+                  {g.group && <h3 class="group-title meta">{g.group}</h3>}
+                  <ul>
+                    {g.items.map((item) => (
+                      <li>
+                        <label>
+                          <input type="checkbox" />
+                          <span>{item}</span>
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+              <p class="hint meta">{t('recipes.tick')}</p>
+            </section>
+          )
+        }
+
+        {
+          d.steps.length > 0 && (
+            <section class="steps" aria-labelledby="steps">
+              <h2 id="steps">{t('recipes.steps')}</h2>
+              <ol>
+                {d.steps.map((step) => (
+                  <li>{step}</li>
+                ))}
+              </ol>
+            </section>
+          )
+        }
+      </div>
+
+      {
+        hasStory && (
+          <section class="story" aria-labelledby="story">
+            <h2 id="story">{t('recipes.story')}</h2>
+            <div class="prose" lang={recipe.bodyLang}>
+              <Content />
+            </div>
+          </section>
+        )
+      }
+    </article>
+  </div>
+</BaseLayout>
+
+<style>
+  .recipe {
+    padding-bottom: var(--space-16);
+  }
+
+  .head {
+    max-width: var(--width-reading);
+    margin-bottom: var(--space-8);
+  }
+
+  h1 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin: var(--space-6) 0 var(--space-4);
+  }
+
+  .lead {
+    margin: 0 0 var(--space-4);
+    color: var(--color-muted);
+    font-size: 18px;
+  }
+
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin: 0 0 var(--space-4);
+  }
+
+  .photo {
+    width: 100%;
+    height: auto;
+    margin-bottom: var(--space-8);
+    border-radius: var(--radius-large);
+    border: var(--border);
+  }
+
+  .cols {
+    display: grid;
+    gap: var(--space-8);
+  }
+
+  @media (min-width: 840px) {
+    .cols {
+      grid-template-columns: minmax(260px, 1fr) 2fr;
+      align-items: start;
+    }
+
+    .ingredients {
+      position: sticky;
+      top: var(--space-6);
+    }
+  }
+
+  h2 {
+    margin: 0 0 var(--space-4);
+    font-size: var(--text-section);
+  }
+
+  .ingredients {
+    padding: var(--space-6);
+    border: var(--border);
+    border-radius: var(--radius-card);
+    background: var(--color-card);
+  }
+
+  .group + .group {
+    margin-top: var(--space-6);
+  }
+
+  .group-title {
+    margin: 0 0 var(--space-2);
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: var(--text-meta);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .ingredients ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ingredients li + li {
+    border-top: 1px dashed var(--color-border);
+  }
+
+  .ingredients label {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    padding: var(--space-2) 0;
+    cursor: pointer;
+  }
+
+  .ingredients input {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: var(--color-sage-deep);
+    transform: translateY(2px);
+  }
+
+  .ingredients input:checked + span {
+    color: var(--color-muted);
+    text-decoration: line-through;
+  }
+
+  .hint {
+    margin: var(--space-4) 0 0;
+  }
+
+  .steps ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: step;
+  }
+
+  .steps li {
+    position: relative;
+    padding: 0 0 var(--space-6) 52px;
+    counter-increment: step;
+  }
+
+  .steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: -2px;
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--color-peach);
+    font-family: var(--font-display);
+    font-weight: 700;
+  }
+
+  .story {
+    max-width: var(--width-reading);
+    margin-top: var(--space-12);
+  }
+</style>
