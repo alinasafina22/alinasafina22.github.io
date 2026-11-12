@@ -90,6 +90,16 @@ const named = item.creator ? t('item.by', { title: item.title, creator: item.cre
             </p>
           )
         }
+        {
+          item.certificate && (
+            <p>
+              <a href={item.certificate} rel="noopener noreferrer" target="_blank" class="external">
+                {t('item.certificate')} <span aria-hidden="true">↗</span>
+                <span class="visually-hidden">{t('newTab')}</span>
+              </a>
+            </p>
+          )
+        }
 
         <TagList tags={item.tags} linkTo={localePath(locale, `/bookshelves/${cat.key}/?tag=`)} />
       </div>

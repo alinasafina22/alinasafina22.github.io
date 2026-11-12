@@ -88,6 +88,8 @@ const courses = defineCollection({
       note: z.string().optional(),
       learned: z.array(z.string()).default([]),
       url: z.url().optional(),
+      /** Link to the certificate, once the course is completed. */
+      certificate: z.url().optional(),
       tags,
       lang,
       demo,

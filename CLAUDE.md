@@ -65,7 +65,7 @@ quotes:
 
 ### Курс — `src/content/courses/`
 
-Поля: `title`, `instructor`, `platform`, `cover`, `status` (learning | completed | want-to-take | paused | dropped), `rating`, `startDate`, `completionDate`, `note`, `learned` (список), `url`. Текст файла — заметки по курсу.
+Поля: `title`, `instructor`, `platform`, `cover`, `status` (learning | completed | want-to-take | paused | dropped), `rating`, `startDate`, `completionDate`, `note`, `learned` (список), `url`, `certificate` (ссылка на сертификат — на странице курса появится кнопка «Сертификат ↗»). Текст файла — заметки по курсу.
 
 ### Фильмы и сериалы (сейчас скрыты)
 
@@ -146,6 +146,10 @@ quotes:
 Актуальная инструкция: [docs.github.com — custom domain for GitHub Pages](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site).
 
 Адрес сайта для canonical-ссылок, sitemap и RSS workflow берёт из настроек Pages сам, менять код не нужно.
+
+## Счётчик посещений
+
+GoatCounter: без cookies и без персональных данных, баннер не нужен. Включается кодом в `src/data/analytics.ts` (`GOATCOUNTER_CODE = 'azh'`), статистика — на `https://<код>.goatcounter.com`. Пустой код — счётчик выключен. Работает только на опубликованном сайте, не в `npm run dev`.
 
 ## Структура
 

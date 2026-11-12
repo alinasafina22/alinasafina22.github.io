@@ -6,6 +6,7 @@ import '@fontsource/ibm-plex-mono/500.css';
 import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import { GOATCOUNTER_CODE } from '../data/analytics';
 import { LOCALES, localePath, switchLocalePath, toLocale, useTranslations, type Locale } from '../i18n/ui';
 
 interface Props {
@@ -64,6 +65,12 @@ const ogImage = new URL(image, Astro.site);
     <meta property="og:locale" content={locale === 'ru' ? 'ru_RU' : 'en_GB'} />
     <meta property="og:image" content={ogImage} />
     <meta name="twitter:card" content="summary_large_image" />
+    {
+      /* Visit counter: only on the published site, and only once a code is set in src/data/analytics.ts. */
+      import.meta.env.PROD && GOATCOUNTER_CODE && (
+        <script is:inline async data-goatcounter={`https://${GOATCOUNTER_CODE}.goatcounter.com/count`} src="https://gc.zgo.at/count.js" />
+      )
+    }
   </head>
   <body>
     <a class="skip-link" href="#main">{t('skip')}</a>
