@@ -19,5 +19,4 @@ Outside of work, my life is mostly chaos. This site is my attempt to bring some 
 ## Right now
 
 - Reading *The Sorrows of Satan* by Marie Corelli.
-
 - Taking Andrew Ng's Machine Learning Specialization.
