@@ -88,6 +88,8 @@ const courses = defineCollection({
       note: z.string().optional(),
       learned: z.array(z.string()).default([]),
       url: z.url().optional(),
+      /** Certificate: a link, or a file in public/certificates/ (e.g. /certificates/kaggle-pandas.jpg). */
+      certificate: z.string().optional(),
       tags,
       lang,
       demo,

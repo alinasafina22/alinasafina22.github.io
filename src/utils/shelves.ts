@@ -186,6 +186,8 @@ export interface ShelfItem {
   plan?: number;
   demo: boolean;
   url?: string;
+  /** Certificate link (courses only). */
+  certificate?: string;
   quotes: string[];
   learned: string[];
   /** Pass to render() to show the review in the current language. */
@@ -242,7 +244,7 @@ export async function getShelf(key: CategoryKey, locale: Locale = 'en'): Promise
         category: cat, id: e.id, href: href(e.id), title: d.title, creator, subline,
         status: statusOf(cat, d.status), rating: d.rating, cover, coverAlt, note: d.note, tags: d.tags,
         dates, sortDate: latest(d.updated, dates), lang: l.lang, bodyLang: l.bodyLang,
-        hasBody: Boolean(l.body?.trim()), plan: d.plan, demo: d.demo, url: d.url, quotes: d.quotes ?? [], learned: d.learned ?? [],
+        hasBody: Boolean(l.body?.trim()), plan: d.plan, demo: d.demo, url: d.url, certificate: d.certificate, quotes: d.quotes ?? [], learned: d.learned ?? [],
         source: l.source,
       };
     }),
