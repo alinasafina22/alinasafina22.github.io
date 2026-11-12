@@ -112,10 +112,13 @@ const hasStory = Boolean(recipe.body?.trim());
   }
 
   h1 {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
     margin: var(--space-6) 0 var(--space-4);
+  }
+
+  /* Keep the doodle right after the last word, even when the title wraps. */
+  h1 :global(.mark) {
+    margin-left: var(--space-2);
+    vertical-align: -0.1em;
   }
 
   .lead {

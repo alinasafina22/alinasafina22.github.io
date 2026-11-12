@@ -27,6 +27,15 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
     </a>
 
     <div class="right">
+    <button type="button" class="theme" aria-pressed="false" aria-label={t('theme.dark')} title={t('theme.dark')} data-theme-toggle>
+      <svg class="moon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+        <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+      </svg>
+      <svg class="sun" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+        <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8" />
+        <path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+      </svg>
+    </button>
     <nav class="lang" aria-label={t('lang.switch')}>
       {
         LOCALES.map((l) => (
@@ -68,6 +77,32 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
     </div>
   </div>
 </header>
+
+<script>
+  // Theme switch: flip light/dark, remember the choice, keep the button state in sync.
+  const root = document.documentElement;
+  const toggle = document.querySelector<HTMLButtonElement>('[data-theme-toggle]');
+  const sync = () => toggle?.setAttribute('aria-pressed', String(root.dataset.theme === 'dark'));
+  sync();
+  toggle?.addEventListener('click', () => {
+    root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    try {
+      localStorage.setItem('theme', root.dataset.theme);
+    } catch {}
+    sync();
+  });
+  // Follow the system setting while there is no saved choice.
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+    let saved = null;
+    try {
+      saved = localStorage.getItem('theme');
+    } catch {}
+    if (!saved) {
+      root.dataset.theme = e.matches ? 'dark' : 'light';
+      sync();
+    }
+  });
+</script>
 
 <script>
   const button = document.querySelector<HTMLButtonElement>('.menu-button');
@@ -129,6 +164,33 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
 
   .logo:hover .squiggle {
     color: var(--color-dusty-rose);
+  }
+
+  /* Theme switch: a moon in the light theme, a sun in the dark one. */
+  .theme {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: var(--border);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--color-muted);
+    cursor: pointer;
+  }
+
+  .theme:hover {
+    color: var(--color-ink);
+  }
+
+  .theme .sun,
+  :global([data-theme='dark']) .theme .moon {
+    display: none;
+  }
+
+  :global([data-theme='dark']) .theme .sun {
+    display: block;
   }
 
   .right {

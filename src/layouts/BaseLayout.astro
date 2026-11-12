@@ -49,7 +49,19 @@ const ogImage = new URL(image, Astro.site);
     {LOCALES.map((l) => <link rel="alternate" hreflang={l} href={new URL(switchLocalePath(Astro.url.pathname, l), Astro.site)} />)}
     <link rel="alternate" hreflang="x-default" href={new URL(switchLocalePath(Astro.url.pathname, 'en'), Astro.site)} />
     {noindex && <meta name="robots" content="noindex" />}
-    <meta name="theme-color" content="#f5f1e8" />
+    <meta name="theme-color" content="#f5f1e8" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1d1f1c" media="(prefers-color-scheme: dark)" />
+    <script is:inline>
+      // Pick the theme before the first paint: saved choice, otherwise the system setting.
+      (function () {
+        var saved;
+        try {
+          saved = localStorage.getItem('theme');
+        } catch (e) {}
+        var dark = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+      })();
+    </script>
     <meta name="generator" content={Astro.generator} />
 
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />

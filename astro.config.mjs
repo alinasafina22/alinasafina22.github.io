@@ -15,7 +15,7 @@ export default defineConfig({
   },
   markdown: {
     // Code blocks in notes: a light, warm theme that fits the paper background.
-    shikiConfig: { theme: 'rose-pine-dawn', wrap: false },
+    shikiConfig: { themes: { light: 'rose-pine-dawn', dark: 'rose-pine-moon' }, wrap: false },
   },
   integrations: [
     sitemap({
