@@ -20,7 +20,7 @@ export default defineConfig({
   integrations: [
     sitemap({
       // /cv/ is intentionally hidden from navigation, keep it out of the sitemap too.
-      filter: (page) => !page.endsWith('/cv/'),
+      filter: (page) => !page.endsWith('/cv/') && !page.endsWith('/404/'),
       i18n: { defaultLocale: 'en', locales: { en: 'en', ru: 'ru' } },
     }),
   ],

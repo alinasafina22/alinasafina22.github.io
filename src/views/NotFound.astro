@@ -1,0 +1,30 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Doodle from '../components/Doodle.astro';
+import { localePath, toLocale, useTranslations } from '../i18n/ui';
+
+const locale = toLocale(Astro.currentLocale);
+const t = useTranslations(locale);
+---
+
+<BaseLayout title={t('404.title')} noindex>
+  <div class="container lost">
+    <Doodle name="loop-arrow" size={72} color="var(--color-dusty-rose)" />
+    <h1>{t('404.heading')}</h1>
+    <p class="lead">{t('404.lead')}</p>
+    <p>
+      <a href={localePath(locale, '/')}>{t('404.home')}</a> · <a href={localePath(locale, '/notes/')}>{t('404.notes')}</a>
+    </p>
+  </div>
+</BaseLayout>
+
+<style>
+  .lost {
+    padding-block: var(--space-16);
+    max-width: calc(var(--width-reading) + 2 * var(--gutter));
+  }
+
+  .lost :global(.doodle) {
+    margin-bottom: var(--space-6);
+  }
+</style>
