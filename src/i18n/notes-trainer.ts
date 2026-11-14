@@ -7,7 +7,7 @@ const SUP = ['⁰', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸'];
 
 const ru = {
   title: 'Ноты на стане',
-  lead: 'Мой тренажёр: читать ноты с листа, узнавать их на слух, собирать аккорды и играть гаммы и упражнения Ганона с аппликатурой. Можно отвечать с MIDI-пианино.',
+  lead: 'Мой тренажёр для запоминания нот на нотном стане и на фортепиано. Можно тренироваться на слух, в виде теста, а также с MIDI-клавиатурой. Ещё есть гаммы и упражнения Ганона для одной или двух рук. Рекомендую заниматься с MIDI-пианино.',
   ui: {
     mode: 'Режим', read: 'Читать ноты', ear: 'На слух', chords: 'Аккорды', scales: 'Гаммы и Ганон', rhythm: 'Ритм',
     piece: 'Что играть',
@@ -184,7 +184,7 @@ const ru = {
 
 const en: typeof ru = {
   title: 'Notes on the staff',
-  lead: 'My own trainer: read notes from the staff, recognise them by ear, build chords and play scales and Hanon exercises with fingering. You can answer on a MIDI piano.',
+  lead: 'My trainer for learning notes on the staff and on the piano. You can practise by ear, as a quiz, or with a MIDI keyboard. There are also scales and Hanon exercises for one or both hands. I recommend using a MIDI piano.',
   ui: {
     mode: 'Mode', read: 'Read notes', ear: 'By ear', chords: 'Chords', scales: 'Scales & Hanon', rhythm: 'Rhythm',
     piece: 'Piece',
