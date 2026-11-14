@@ -96,6 +96,8 @@ const en = {
   'things.emptyHint': 'Add a Markdown file to src/content/things/',
   'things.saved': 'saved',
   'things.visit': 'Visit {host}',
+  'things.open': 'Open it',
+  'things.onSite': 'here on the site',
   'things.savedIn': '{title}, saved in Things.',
   'external': '(external link, opens in a new tab)',
   'newTab': '(opens in a new tab)',
@@ -246,6 +248,8 @@ const ru: Record<Key, string> = {
   'things.emptyHint': 'Добавь Markdown-файл в src/content/things/',
   'things.saved': 'сохранено',
   'things.visit': 'Открыть {host}',
+  'things.open': 'Открыть',
+  'things.onSite': 'здесь, на сайте',
   'things.savedIn': '{title}: сохранено в находках.',
   'external': '(внешняя ссылка, откроется в новой вкладке)',
   'newTab': '(откроется в новой вкладке)',
@@ -369,6 +373,9 @@ const TAGS: Record<string, Record<Locale, string>> = {
   'поэзия': { en: 'poetry', ru: 'поэзия' },
   'десерт': { en: 'dessert', ru: 'десерт' },
   'завтрак': { en: 'breakfast', ru: 'завтрак' },
+  'музыка': { en: 'music', ru: 'музыка' },
+  'пианино': { en: 'piano', ru: 'пианино' },
+  'самоделки': { en: 'made by me', ru: 'самоделки' },
 };
 
 export const tagLabel = (tag: string, locale: Locale) => TAGS[tag]?.[locale] ?? tag;
