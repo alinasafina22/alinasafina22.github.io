@@ -136,7 +136,9 @@ const u = L.ui;
       <div class="keys" id="keys"></div>
       <div class="keys" id="rkeys" hidden></div>
       <div class="tap-box" id="tapBox" hidden>
+        <ol class="tap-steps">{u.tapSteps.map((step) => <li>{step}</li>)}</ol>
         <div class="tools">
+          <button class="tool" id="rListen" type="button">{u.listen}</button>
           <button class="tool primary" id="rStart" type="button">{u.start}</button>
           <button class="tool" id="rRetry" type="button" hidden>{u.retry}</button>
           <button class="tool primary" id="rNext" type="button" hidden>{u.next}</button>
@@ -865,6 +867,30 @@ const u = L.ui;
   }
   .nt .keys#rkeys button {
     font: 600 19px/1 var(--font-body);
+  }
+  .nt .tap-steps {
+    margin: 0;
+    padding-left: 1.3em;
+    font-size: var(--text-small);
+    color: var(--color-muted);
+    display: grid;
+    gap: 2px;
+  }
+  .nt .tap-steps li::marker {
+    color: var(--color-ink);
+    font-weight: 600;
+  }
+  .nt svg.staff .beatnum {
+    font: 11px var(--font-mono);
+    fill: var(--color-muted);
+  }
+  .nt svg.staff g.now .note,
+  .nt svg.staff g.now .flag,
+  .nt svg.staff g.now .dot {
+    fill: var(--color-focus);
+  }
+  .nt svg.staff g.now .stem {
+    stroke: var(--color-focus);
   }
   .nt .tap-box {
     display: flex;
