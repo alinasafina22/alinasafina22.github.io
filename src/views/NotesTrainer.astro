@@ -29,6 +29,22 @@ const u = L.ui;
             <button type="button" data-v="ear">{u.ear}</button>
             <button type="button" data-v="chords">{u.chords}</button>
             <button type="button" data-v="scales">{u.scales}</button>
+            <button type="button" data-v="rhythm">{u.rhythm}</button>
+          </div>
+        </div>
+        <div class="row" id="row-rtask" hidden>
+          <span class="lab">{u.rtask}</span>
+          <div class="seg" id="seg-rtask">
+            <button type="button" data-v="value">{u.rValue}</button>
+            <button type="button" data-v="tap">{u.rTap}</button>
+          </div>
+        </div>
+        <div class="row" id="row-rlevel" hidden>
+          <span class="lab">{u.rlevel}</span>
+          <div class="seg" id="seg-rlevel">
+            <button type="button" data-v="1">{u.lvl1}</button>
+            <button type="button" data-v="2">{u.lvl2}</button>
+            <button type="button" data-v="3">{u.lvl3}</button>
           </div>
         </div>
         <div class="row" id="row-piece" hidden>
@@ -77,6 +93,22 @@ const u = L.ui;
             <button type="button" data-v="ledger">{u.ledger}</button>
           </div>
         </div>
+        <div class="row" id="row-tempo" hidden>
+          <span class="lab">{u.tempo}</span>
+          <button class="tool" id="metroBtn" type="button" aria-pressed="false"><i class="beat-dot" id="beatDot"></i>{u.metro}</button>
+          <span class="stepper">
+            <button class="tool" id="bpmDown" type="button" aria-label={u.tempoDown}>−</button>
+            <output id="bpmOut">80</output><span class="unit">{u.bpm}</span>
+            <button class="tool" id="bpmUp" type="button" aria-label={u.tempoUp}>+</button>
+          </span>
+        </div>
+        <div class="row" id="row-sub" hidden>
+          <span class="lab">{u.perBeat}</span>
+          <div class="seg" id="seg-sub">
+            <button type="button" data-v="1">{u.sub1}</button>
+            <button type="button" data-v="2">{u.sub2}</button>
+          </div>
+        </div>
         <div class="row">
           <span class="lab">{u.piano}</span>
           <button class="tool" id="midiBtn" type="button">{u.connect}</button>
@@ -102,6 +134,15 @@ const u = L.ui;
       </section>
 
       <div class="keys" id="keys"></div>
+      <div class="keys" id="rkeys" hidden></div>
+      <div class="tap-box" id="tapBox" hidden>
+        <div class="tools">
+          <button class="tool primary" id="rStart" type="button">{u.start}</button>
+          <button class="tool" id="rRetry" type="button" hidden>{u.retry}</button>
+          <button class="tool primary" id="rNext" type="button" hidden>{u.next}</button>
+        </div>
+        <button class="tap-btn" id="tapBtn" type="button">{u.tap}</button>
+      </div>
       <div class="piano" id="piano" hidden>
         <svg id="pianoSvg" viewBox="0 0 300 100" role="img" aria-label={u.pianoAria}></svg>
         <div class="tools">
@@ -117,6 +158,12 @@ const u = L.ui;
         <button class="tool" id="restart" type="button">{u.restart}</button>
       </div>
       <div class="hint" id="hint" hidden></div>
+
+      <section class="memo" id="memo" hidden>
+        <h2>{u.memoH}</h2>
+        <div class="memo-grid" id="memoGrid"></div>
+        <p>{u.memoTree}</p>
+      </section>
 
       <details class="crib-box">
         <summary>{u.crib}</summary>
@@ -704,5 +751,181 @@ const u = L.ui;
     font-size: var(--text-meta);
     color: var(--color-muted);
     margin: 0;
+  }
+  /* metronome */
+  .nt .stepper {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+  .nt .stepper .tool {
+    padding: 4px 10px;
+    min-width: 34px;
+  }
+  .nt .stepper output {
+    font: 500 var(--text-small) var(--font-mono);
+    min-width: 3ch;
+    text-align: right;
+  }
+  .nt .stepper .unit {
+    font-size: var(--text-meta);
+    color: var(--color-muted);
+    margin-right: var(--space-1);
+  }
+  .nt #metroBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .nt #metroBtn[aria-pressed='true'] {
+    border-color: var(--color-ink);
+  }
+  .nt .beat-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--color-border);
+  }
+  .nt .beat-dot.on {
+    background: var(--color-dusty-rose);
+  }
+  .nt .beat-dot.on.accent {
+    background: var(--color-error);
+  }
+  .nt .feedback .timing {
+    display: block;
+    font: var(--text-meta) var(--font-mono);
+    color: var(--color-muted);
+    margin-top: 2px;
+  }
+  .nt .summary .tempo-sum {
+    color: var(--color-ink);
+  }
+  .nt .history {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font: var(--text-meta) / 1.7 var(--font-mono);
+    color: var(--color-muted);
+  }
+
+  /* rhythm */
+  .nt svg.staff .stem {
+    stroke: var(--color-ink);
+    stroke-width: 1.4;
+  }
+  .nt svg.staff .beam,
+  .nt svg.staff .flag,
+  .nt svg.staff .dot,
+  .nt svg.staff .rest-box,
+  .nt svg.staff .ts {
+    fill: var(--color-ink);
+  }
+  .nt svg.staff .rest-line {
+    fill: none;
+    stroke: var(--color-ink);
+    stroke-width: 2.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .nt svg.staff .ts {
+    font: 700 22px var(--font-display);
+  }
+  .nt svg.staff g.ok .stem,
+  .nt svg.staff g.ok .rest-line {
+    stroke: var(--color-success);
+  }
+  .nt svg.staff g.ok .note,
+  .nt svg.staff g.ok .beam,
+  .nt svg.staff g.ok .flag,
+  .nt svg.staff g.ok .dot {
+    fill: var(--color-success);
+  }
+  .nt svg.staff g.bad .stem {
+    stroke: var(--color-error);
+  }
+  .nt svg.staff g.bad .note,
+  .nt svg.staff g.bad .flag,
+  .nt svg.staff g.bad .dot {
+    fill: var(--color-error);
+  }
+  .nt svg.staff .rmark {
+    font: 10px var(--font-body);
+    fill: var(--color-muted);
+  }
+  .nt svg.staff .rmark.ok {
+    fill: var(--color-success);
+  }
+  .nt svg.staff .rmark.bad {
+    fill: var(--color-error);
+  }
+  .nt svg.staff .playhead {
+    stroke: var(--color-dusty-rose);
+    stroke-width: 2;
+  }
+  .nt .keys#rkeys button {
+    font: 600 19px/1 var(--font-body);
+  }
+  .nt .tap-box {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .nt .tap-btn {
+    font: 600 20px var(--font-display);
+    color: var(--color-paper);
+    background: var(--color-ink);
+    border: 0;
+    border-radius: var(--radius-large);
+    padding: 28px 0;
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
+    transition: transform 0.05s;
+  }
+  .nt .tap-btn:active,
+  .nt .tap-btn.hit {
+    transform: scale(0.98);
+    background: var(--color-dusty-rose);
+    color: var(--color-ink);
+  }
+  .nt .memo {
+    background: var(--color-card);
+    border: var(--border);
+    border-radius: var(--radius-large);
+    padding: var(--space-3) var(--space-4);
+    font-size: 13.5px;
+  }
+  .nt .memo h2 {
+    font-size: 17px;
+    margin: 0 0 var(--space-2);
+  }
+  .nt .memo p {
+    margin: var(--space-2) 0 0;
+    color: var(--color-muted);
+  }
+  .nt .memo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: var(--space-2);
+  }
+  .nt .memo-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .nt .memo-item svg {
+    width: 34px;
+    height: 52px;
+    flex: none;
+  }
+  .nt .memo-item b {
+    display: block;
+    font-weight: 500;
+    font-size: 13px;
+  }
+  .nt .memo-item span {
+    color: var(--color-muted);
+    font: var(--text-meta) var(--font-mono);
   }
 </style>
