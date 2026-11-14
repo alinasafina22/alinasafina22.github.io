@@ -17,7 +17,7 @@ const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
 };
-const cfg = Object.assign({ mode: 'read', clef: 'treble', range: 'staff', oct: 'exact', hand: 'R', ctask: 'name', ctypes: ['triad'], piece: 'C' }, store.get('nt-cfg', {}));
+const cfg = Object.assign({ mode: 'read', clef: 'treble', range: 'staff', oct: 'exact', hand: 'R', ctask: 'name', ctypes: ['triad'], piece: 'C', bpm: 80, sub: '1', rtask: 'value', rlevel: '1' }, store.get('nt-cfg', {}));
 if (!Array.isArray(cfg.ctypes) || !cfg.ctypes.length) cfg.ctypes = ['triad'];
 let stats = store.get('nt-stats', {});
 let best = store.get('nt-best', {});
@@ -120,12 +120,13 @@ const fullName = (n) => { const d = dOf(n); return L.full(NAMES[d % 7], Math.flo
 function newRound() {
   clearTimeout(timer);
   round = { i: 0, right: 0, misses: [] };
-  $('sum').hidden = true; $('game').hidden = false; $('keys').style.visibility = ''; $('piano').style.visibility = '';
+  $('sum').hidden = true; $('game').hidden = false; ['keys', 'piano', 'rkeys', 'tapBox'].forEach((id) => ($(id).style.visibility = ''));
   next();
 }
 function next() {
   if (cfg.mode === 'chords') return nextChord();
   if (cfg.mode === 'scales') return startSeq();
+  if (cfg.mode === 'rhythm') return cfg.rtask === 'tap' ? nextTapBar() : nextRhythmValue();
   locked = false;
   cur = pick(cur);
   document.querySelectorAll('#keys button').forEach((b) => { b.className = ''; b.disabled = false; });
@@ -138,6 +139,7 @@ function next() {
 }
 function playCur() {
   if (cfg.mode === 'scales') return playBar();
+  if (cfg.mode === 'rhythm') return playRhythm();
   if (cfg.mode === 'chords') {
     if (!chord) return;
     const ms = chord.notes.map(midiN);
@@ -187,14 +189,20 @@ function finish() {
   const prev = best[bk] || 0;
   if (round.right > prev) { best[bk] = round.right; store.set('nt-best', best); }
   const pct = round.right / ROUND;
-  const msg = cfg.mode === 'scales' ? (pct === 1 ? L.seqDonePerfect : L.seqDone)
+  const timed = cfg.mode === 'scales' ? seqTimes.filter(Boolean) : [];
+  const lowTempo = timed.length >= seq.length / 2 && timed.filter((r) => r.ok).length / seq.length < 0.8;
+  const extra = cfg.mode === 'scales' ? tempoSummary() : '';
+  if (cfg.mode === 'scales') stopMetro();
+  rClear();
+  const msg = cfg.mode === 'rhythm' ? (pct === 1 ? L.rhPerfect : L.rhMore)
+    : cfg.mode === 'scales' ? (lowTempo ? L.seqTempoLow : pct === 1 ? L.seqDonePerfect : L.seqDone)
     : pct === 1 ? (cfg.mode === 'chords' ? L.donePerfectChords : L.donePerfect) : pct >= 0.8 ? L.doneGood : L.doneMore;
   const uniq = [...new Map(round.misses.map((n) => [n.label || key(n), n])).values()];
   $('sum').innerHTML = `<div class="result">${round.right}<small> / ${ROUND}</small></div>
-    <p>${msg}</p>
+    <p>${msg}</p>${extra}
     ${uniq.length ? `<div class="misses">${uniq.map((n) => `<span>${n.label ? n.label : fullName(n) + (cfg.clef === 'both' ? (n.clef === 'bass' ? L.bassMark : L.trebleMark) : '')}</span>`).join('')}</div>` : ''}
     <button class="tool primary" type="button" id="again">${L.again}</button>`;
-  $('sum').hidden = false; $('game').hidden = true; $('keys').style.visibility = 'hidden'; $('piano').style.visibility = 'hidden';
+  $('sum').hidden = false; $('game').hidden = true; ['keys', 'piano', 'rkeys', 'tapBox'].forEach((id) => ($(id).style.visibility = 'hidden'));
   $('again').onclick = newRound;
   updateHUD();
 }
@@ -208,11 +216,13 @@ function updateHUD() {
 function bkey() {
   if (cfg.mode === 'ear') return 'ear';
   if (cfg.mode === 'scales') return 'sc-' + cfg.piece + '-' + cfg.hand;
+  if (cfg.mode === 'rhythm') return 'rh-' + cfg.rtask + '-' + cfg.rlevel;
   if (cfg.mode === 'chords') return 'chords-' + cfg.hand + '-' + cfg.ctask + '-' + [...cfg.ctypes].sort().join('');
   return cfg.mode + '-' + cfg.clef + '-' + cfg.range;
 }
 function showHint() {
   const h = $('hint');
+  if (cfg.mode === 'rhythm') { h.innerHTML = cfg.rtask === 'tap' ? L.hintRhTap : L.hintRhValue; return; }
   if (cfg.mode === 'scales') {
     h.innerHTML = (cfg.piece[0] === 'h' ? L.hintHanon : cfg.piece === 'F' ? L.hintScaleF : L.hintScale) + (cfg.hand === 'B' ? ' ' + L.hintBoth : '');
     return;
@@ -446,12 +456,12 @@ const stepNames = (step) => step.map(nm).join(' + ');
 function startSeq() {
   clearTimeout(seqTimer); clearTimeout(timer);
   locked = false; seqDone = false; seqHit = new Set(); seqLast = new Set(); seqFlash = null;
-  seq = buildSeq(); seqErr = seq.map(() => false);
+  seq = buildSeq(); seqErr = seq.map(() => false); seqTimes = []; seqAnchor = null;
   ROUND = seq.length;
   $('task').innerHTML = `<b>${L.pieces[cfg.piece] || L.pieces.C}</b><span>${cfg.piece[0] === 'h' ? L.hanonSub : L.scaleSub} · ${L.handSub(cfg.hand)}</span>`;
   $('check').hidden = true; $('clear').hidden = true; $('nextBtn').hidden = true;
   const fb = $('fb'); fb.className = 'feedback idle';
-  fb.textContent = midiAccess && midiAccess.inputs.size ? L.seqAskMidi : cfg.hand === 'B' ? L.seqAskBoth : L.seqAsk;
+  fb.textContent = metro.run ? L.metroGo : midiAccess && midiAccess.inputs.size ? L.seqAskMidi : cfg.hand === 'B' ? L.seqAskBoth : L.seqAsk;
   renderSeq();
   updateHUD();
   if (!$('hint').hidden) showHint();
@@ -521,11 +531,13 @@ function seqPress(m) {
   const cur = seq[round.i], fb = $('fb');
   if (seqHit.has(m)) return;
   if (cur.some((n) => midiN(n) === m)) {
+    if (!seqHit.size) seqTimes[round.i] = seqTiming(round.i, nowT());
     seqHit.add(m); seqFlash = null;
     if (seqHit.size < cur.length) { renderSeq(); return; }
     if (!seqErr[round.i]) round.right++;
     seqLast = new Set(seqHit); seqHit = new Set(); round.i++;
-    fb.className = 'feedback ok'; fb.innerHTML = `<span>${L.seqOk(cur.map((n) => [n.hand, nm(n), n.f]))}</span>`;
+    const tm = seqTimes[round.i - 1];
+    fb.className = 'feedback ok'; fb.innerHTML = `<span>${L.seqOk(cur.map((n) => [n.hand, nm(n), n.f]))}${tm ? `<span class="timing">${timingText(tm)}</span>` : ''}</span>`;
     if (round.i >= seq.length) { seqDone = true; renderSeq(); updateHUD(); timer = setTimeout(finish, 900); return; }
   } else {
     if (!seqErr[round.i]) round.misses.push({ label: stepNames(cur) });
@@ -540,6 +552,306 @@ function playBar() {
   const from = Math.min(round.i, seq.length - 1), end = Math.floor(from / BAR) * BAR + BAR;
   seq.slice(from, end).forEach((step, k) => step.forEach((n) => tone(midiN(n), k * 0.32, 0.5)));
 }
+
+// ---------- metronome (scales and Hanon) ----------
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const latency = () => (ac && (ac.outputLatency || ac.baseLatency)) || 0;
+const nowT = () => ctx().currentTime - latency();
+const scheduled = [];
+function click(t, accent = false, soft = false) {
+  const a = ctx(); if (!a) return;
+  const o = a.createOscillator(), g = a.createGain();
+  o.type = 'sine'; o.frequency.value = accent ? 1760 : 1320;
+  const peak = soft ? 0.12 : accent ? 0.4 : 0.26;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+  o.connect(g).connect(a.destination); o.start(t); o.stop(t + 0.06);
+  scheduled.push(o);
+}
+function flashDot(delay, accent) {
+  setTimeout(() => {
+    const d = $('beatDot'); d.classList.add('on'); d.classList.toggle('accent', accent);
+    setTimeout(() => d.classList.remove('on', 'accent'), 90);
+  }, Math.max(0, delay * 1000));
+}
+const metro = { run: false, timer: null, next: 0, n: 0, origin: 0 };
+function schedMetro() {
+  const a = ac, beat = 60 / cfg.bpm;
+  while (metro.next < a.currentTime + 0.12) {
+    const accent = metro.n % 4 === 0;
+    click(metro.next, accent); flashDot(metro.next - a.currentTime, accent);
+    metro.next += beat; metro.n++;
+  }
+}
+function startMetro() {
+  const a = ctx(); if (!a) return;
+  clearInterval(metro.timer);
+  metro.run = true; metro.origin = a.currentTime + 0.12; metro.next = metro.origin; metro.n = 0;
+  metro.timer = setInterval(schedMetro, 25); schedMetro();
+  $('metroBtn').setAttribute('aria-pressed', 'true');
+  seqAnchor = null;
+  if (cfg.mode === 'scales' && round.i === 0) { const fb = $('fb'); fb.className = 'feedback idle'; fb.textContent = L.metroGo; }
+}
+function stopMetro() {
+  clearInterval(metro.timer); metro.run = false; seqAnchor = null;
+  $('metroBtn').setAttribute('aria-pressed', 'false');
+}
+// Timing of a scale step against the metronome grid. Returns {dev, ok, off} or null without the metronome.
+let seqAnchor = null, seqTimes = [];
+function seqTiming(i, t) {
+  if (!metro.run) return null;
+  const step = 60 / cfg.bpm / Number(cfg.sub), grid = (x) => metro.origin + Math.round((x - metro.origin) / step) * step;
+  const tol = clamp(0.15 * step, 0.05, 0.12);
+  if (!seqAnchor) seqAnchor = { t: grid(t), i };
+  let dev = t - (seqAnchor.t + (i - seqAnchor.i) * step), off = false;
+  if (Math.abs(dev) > 0.75 * step) { seqAnchor = { t: grid(t), i }; dev = t - seqAnchor.t; off = true; }
+  return { dev, ok: !off && Math.abs(dev) <= tol, off };
+}
+const timingText = (r) => (r.off ? L.offBeat : r.ok ? L.onBeat : r.dev < 0 ? L.early(Math.round(-r.dev * 1000)) : L.late(Math.round(r.dev * 1000)));
+function tempoSummary() {
+  const done = seqTimes.filter(Boolean);
+  if (done.length < seq.length / 2) return '';
+  const ok = done.filter((r) => r.ok).length, pct = Math.round((ok / seq.length) * 100), sub = Number(cfg.sub);
+  const all = store.get('nt-tempo', {}), k = cfg.piece + '-' + cfg.hand, list = all[k] || [];
+  list.push({ d: Date.now(), bpm: cfg.bpm, sub, pct });
+  all[k] = list.slice(-30); store.set('nt-tempo', all);
+  const fmt = (d) => new Date(d).toLocaleDateString(document.documentElement.lang, { day: 'numeric', month: 'short' });
+  const good = list.filter((r) => r.pct >= 80).sort((a, b) => b.bpm * b.sub - a.bpm * a.sub)[0];
+  const past = list.slice(0, -1).slice(-5).reverse();
+  return `<p class="tempo-sum">${L.tempoLine(ok, seq.length, pct, cfg.bpm, sub)}</p>
+    ${good ? `<p>${L.bestTempo(good.bpm * good.sub / sub)}</p>` : ''}
+    ${past.length ? `<p>${L.historyH}</p><ul class="history">${past.map((r) => `<li>${L.histRow(fmt(r.d), r.bpm, r.sub, r.pct)}</li>`).join('')}</ul>` : ''}`;
+}
+function setBpm(v) {
+  cfg.bpm = clamp(v, 40, 200); store.set('nt-cfg', cfg); $('bpmOut').textContent = cfg.bpm;
+  if (metro.run) startMetro();
+}
+$('bpmDown').onclick = () => setBpm(cfg.bpm - 5);
+$('bpmUp').onclick = () => setBpm(cfg.bpm + 5);
+$('metroBtn').onclick = () => (metro.run ? stopMetro() : startMetro());
+
+// ---------- rhythm ----------
+// Durations in sixteenths. Kinds starting with r are rests.
+const LEN = { w: 16, h: 8, q: 4, e: 2, s: 1, hd: 12, qd: 6, rw: 16, rh: 8, rq: 4, re: 2 };
+const MID = BOT - 2 * S, STEM = 36;
+function head(x, kind) {
+  if (kind === 'w') return `<path class="note" fill-rule="evenodd" d="${ell(x, MID, 8.6, 6, 0)}${ell(x, MID, 3.1, 5.2, -32)}"/>`;
+  const hollow = kind === 'h' || kind === 'hd';
+  return `<path class="note" fill-rule="evenodd" d="${ell(x, MID, 7, 5, -20)}${hollow ? ell(x, MID, 5, 2.4, -20) : ''}"/>`;
+}
+const flagPath = (sx, top) => `<path class="flag" d="M${sx} ${top} c 1 7 10 9 9 20 c 2 -9 -3 -14 -9 -15 z"/>`;
+// One symbol on the middle line. stemTop overrides the stem end (for beams); flags=false when beamed.
+function glyph(kind, x, stemTop = MID - STEM, flags = true) {
+  let h = '';
+  if (kind[0] === 'r') {
+    if (kind === 'rw') h = `<rect class="rest-box" x="${x - 7}" y="${BOT - 3 * S}" width="14" height="6"/>`;
+    else if (kind === 'rh') h = `<rect class="rest-box" x="${x - 7}" y="${MID - 6}" width="14" height="6"/>`;
+    else if (kind === 'rq') h = `<path class="rest-line" d="M${x - 2} ${MID - 17} L${x + 4} ${MID - 9} L${x - 2} ${MID - 2} L${x + 4} ${MID + 5} Q${x - 5} ${MID + 2} ${x + 1} ${MID + 13}"/>`;
+    else h = `<circle class="rest-box" cx="${x - 3}" cy="${MID - 7}" r="3"/><path class="rest-line" style="stroke-width:2" d="M${x - 2} ${MID - 5} Q${x + 2} ${MID - 5} ${x + 5} ${MID - 10} L${x - 1} ${MID + 10}"/>`;
+    return h;
+  }
+  h += head(x, kind);
+  if (kind !== 'w') h += `<line class="stem" x1="${x + 6.4}" x2="${x + 6.4}" y1="${MID - 1}" y2="${stemTop}"/>`;
+  if (flags && (kind === 'e' || kind === 's')) {
+    h += flagPath(x + 6.4, stemTop);
+    if (kind === 's') h += flagPath(x + 6.4, stemTop + 7);
+  }
+  if (kind === 'hd' || kind === 'qd') h += `<circle class="dot" cx="${x + 14}" cy="${MID - 5}" r="2.3"/>`;
+  return h;
+}
+function rhythmStaff(W, ts = true) {
+  let h = '';
+  for (let i = 0; i < 5; i++) { const y = BOT - i * S; h += `<line class="line" x1="8" x2="${W - 8}" y1="${y}" y2="${y}"/>`; }
+  h += `<line class="line" x1="8" x2="8" y1="${BOT - 4 * S}" y2="${BOT}"/><rect class="ts" x="${W - 12}" y="${BOT - 4 * S}" width="4" height="${4 * S}"/><line class="line" x1="${W - 16}" x2="${W - 16}" y1="${BOT - 4 * S}" y2="${BOT}"/>`;
+  if (ts) h += `<text class="ts" x="30" y="${MID - 2}" text-anchor="middle">4</text><text class="ts" x="30" y="${BOT - 2}" text-anchor="middle">4</text>`;
+  return h;
+}
+// cells: k = symbols, at = allowed start positions (default: on any beat), lvl = first level that uses it
+const CELLS = [
+  { k: ['w'], at: [0], lvl: 1, w: 0.4 }, { k: ['h'], at: [0, 8], lvl: 1 }, { k: ['q'], lvl: 1, w: 1.6 },
+  { k: ['rq'], lvl: 1, w: 0.6 }, { k: ['rh'], at: [0, 8], lvl: 1, w: 0.4 },
+  { k: ['e', 'e'], lvl: 2, w: 1.6 }, { k: ['hd'], at: [0, 4], lvl: 2 }, { k: ['re', 'e'], lvl: 2, w: 0.6 },
+  { k: ['s', 's', 's', 's'], lvl: 3 }, { k: ['e', 's', 's'], lvl: 3 }, { k: ['s', 's', 'e'], lvl: 3 }, { k: ['qd', 'e'], at: [0, 8], lvl: 3 },
+];
+function genBar() {
+  const lvl = Number(cfg.rlevel);
+  for (let tries = 0; tries < 50; tries++) {
+    const items = []; let pos = 0, cid = 0;
+    while (pos < 16) {
+      const c = CELLS.filter((c) => c.lvl <= lvl).map((c) => ({ ...c, len: c.k.reduce((a, k) => a + LEN[k], 0) }))
+        .filter((c) => c.len <= 16 - pos && (c.at ? c.at.includes(pos) : true));
+      const w = c.map((x) => (x.w || 1) * (x.lvl === lvl && lvl > 1 ? 2 : 1));
+      let r = Math.random() * w.reduce((a, b) => a + b, 0), pick = c[c.length - 1];
+      for (let i = 0; i < c.length; i++) { r -= w[i]; if (r <= 0) { pick = c[i]; break; } }
+      let t = pos;
+      pick.k.forEach((k) => { items.push({ k, t, cell: cid, beam: pick.k.length > 1 && pick.k.every((x) => x === 'e' || x === 's') }); t += LEN[k]; });
+      pos += pick.len; cid++;
+    }
+    const notes = items.filter((it) => it.k[0] !== 'r').length;
+    const sig = items.map((i) => i.k).join();
+    if (notes >= 2 && sig !== rState.sig) { rState.sig = sig; return items; }
+  }
+  return [{ k: 'q', t: 0 }, { k: 'q', t: 4 }, { k: 'h', t: 8 }];
+}
+const RW = 350, RX0 = 62, RSPAN = 262;
+const rx = (t) => RX0 + (t / 16) * RSPAN + 10;
+function drawBar(items, results) {
+  staff.setAttribute('viewBox', `0 22 ${RW} ${results ? 132 : 112}`);
+  let h = rhythmStaff(RW);
+  const groups = {};
+  items.forEach((it) => { if (it.beam) (groups[it.cell] = groups[it.cell] || []).push(it); });
+  items.forEach((it, idx) => {
+    const res = results && results[idx], cls = res ? (res === 'ok' ? 'ok' : 'bad') : '';
+    h += `<g class="${cls}">${glyph(it.k, rx(it.t), MID - STEM, !it.beam)}</g>`;
+    if (res) h += `<text class="rmark ${res === 'ok' ? 'ok' : 'bad'}" x="${rx(it.t) + 3}" y="${BOT + 24}" text-anchor="middle">${L.marks[res]}</text>`;
+  });
+  Object.values(groups).forEach((g) => {
+    const top = MID - STEM, xs = g.map((it) => rx(it.t) + 6.4);
+    const bad = results && g.some((it) => results[items.indexOf(it)] !== 'ok'), ok = results && !bad;
+    const cls = results ? (ok ? 'ok' : 'bad') : '';
+    h += `<g class="${cls}"><rect class="beam" x="${xs[0] - 0.7}" y="${top}" width="${xs[xs.length - 1] - xs[0] + 1.4}" height="4.5"/>`;
+    g.forEach((it, j) => {
+      if (it.k !== 's') return;
+      const nx = g[j + 1] && g[j + 1].k === 's', px = g[j - 1] && g[j - 1].k === 's';
+      if (nx) h += `<rect class="beam" x="${xs[j] - 0.7}" y="${top + 7}" width="${xs[j + 1] - xs[j] + 1.4}" height="4.5"/>`;
+      else if (!px) { const dir = j > 0 ? -1 : 1; h += `<rect class="beam" x="${dir > 0 ? xs[j] : xs[j] - 8}" y="${top + 7}" width="8" height="4.5"/>`; }
+    });
+    h += '</g>';
+  });
+  staff.innerHTML = h;
+}
+const rState = { items: [], phase: 'idle', B: 0, beat: 0.75, taps: [], scored: false, timers: [], sig: '', kind: null };
+function rClear() {
+  rState.timers.forEach(clearTimeout); rState.timers = [];
+  scheduled.forEach((o) => { try { o.stop(); } catch {} }); scheduled.length = 0;
+  if (metro.run) { /* the scales metronome is stopped outside scales mode */ }
+}
+function nextTapBar() {
+  rClear(); clearTimeout(timer);
+  rState.items = genBar(); rState.phase = 'idle'; rState.scored = false; rState.taps = [];
+  drawBar(rState.items);
+  const fb = $('fb'); fb.className = 'feedback idle'; fb.textContent = L.tapIdle;
+  $('rStart').hidden = false; $('rRetry').hidden = true; $('rNext').hidden = true;
+  updateHUD();
+  if (!$('hint').hidden) showHint();
+}
+function rStart() {
+  if (rState.phase === 'count' || rState.phase === 'play') return;
+  const a = ctx(); if (!a) return;
+  rClear(); drawBar(rState.items);
+  const beat = 60 / cfg.bpm, t0 = a.currentTime + 0.25;
+  rState.beat = beat; rState.B = t0 + 4 * beat; rState.taps = []; rState.phase = 'count';
+  for (let k = 0; k < 8; k++) click(t0 + k * beat, k % 4 === 0, k >= 4);
+  const fb = $('fb'); fb.className = 'feedback idle';
+  for (let k = 0; k < 4; k++) rState.timers.push(setTimeout(() => (fb.innerHTML = `<span class="big">${k + 1}</span>`), (t0 + k * beat - a.currentTime) * 1000));
+  rState.timers.push(setTimeout(() => { rState.phase = 'play'; fb.innerHTML = `<span class="big">${L.tapNow}</span>`; }, (rState.B - a.currentTime - 0.05) * 1000));
+  rState.timers.push(setTimeout(rEvaluate, (rState.B + 4 * beat + 0.35 * beat - a.currentTime) * 1000));
+  $('rStart').hidden = true; $('rRetry').hidden = true; $('rNext').hidden = true;
+}
+function rTap() {
+  const b = $('tapBtn'); b.classList.add('hit'); setTimeout(() => b.classList.remove('hit'), 90);
+  if (rState.phase !== 'count' && rState.phase !== 'play') return;
+  const a = ctx(), t = a.currentTime - latency();
+  const o = a.createOscillator(), g = a.createGain(); o.type = 'triangle'; o.frequency.value = 660;
+  g.gain.setValueAtTime(0.2, a.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + 0.08);
+  o.connect(g).connect(a.destination); o.start(); o.stop(a.currentTime + 0.1);
+  if (t >= rState.B - 0.5 * rState.beat) rState.taps.push(t);
+}
+function rEvaluate() {
+  rState.phase = 'done';
+  const { items, B, beat, taps } = rState, sx = beat / 4;
+  const exp = items.map((it, idx) => ({ idx, t: B + it.t * sx, rest: it.k[0] === 'r' })).filter((e) => !e.rest);
+  const onsets = [...exp.map((e) => e.t), B + 16 * sx];
+  const minGap = Math.min(...onsets.slice(1).map((t, i) => t - onsets[i]));
+  const win = Math.min(0.45 * minGap, 0.35 * beat), tol = Math.min(win, clamp(0.13 * beat, 0.07, 0.12));
+  const used = new Set(), results = items.map(() => null);
+  exp.forEach((e) => {
+    let best = -1, bd = Infinity;
+    taps.forEach((t, j) => { const d = Math.abs(t - e.t); if (!used.has(j) && d <= win && d < bd) { bd = d; best = j; } });
+    if (best < 0) { results[e.idx] = 'miss'; return; }
+    used.add(best); const dev = taps[best] - e.t;
+    results[e.idx] = Math.abs(dev) <= tol ? 'ok' : dev < 0 ? 'early' : 'late';
+  });
+  const ok = exp.filter((e) => results[e.idx] === 'ok').length, extra = taps.length - used.size;
+  const perfect = ok === exp.length && extra === 0;
+  drawBar(items, results);
+  const fb = $('fb'); fb.className = 'feedback ' + (perfect ? 'ok' : 'bad'); fb.innerHTML = `<span>${L.tapResult(ok, exp.length, extra)}</span>`;
+  if (!rState.scored) {
+    rState.scored = true; round.i++;
+    if (perfect) round.right++;
+    const s = stats['r:tap' + cfg.rlevel] || { n: 0, e: 0 }; s.n++; if (!perfect) s.e++; stats['r:tap' + cfg.rlevel] = s; store.set('nt-stats', stats);
+  }
+  $('rRetry').hidden = false; $('rNext').hidden = false;
+  updateHUD();
+}
+function rNext() { if (round.i >= ROUND) finish(); else nextTapBar(); }
+function playRhythm() {
+  const a = ctx(); if (!a) return;
+  rClear();
+  const beat = 60 / cfg.bpm, t0 = a.currentTime + 0.2;
+  if (cfg.rtask === 'tap') {
+    for (let k = 0; k < 8; k++) click(t0 + k * beat, k % 4 === 0, k >= 4);
+    const B = t0 + 4 * beat;
+    rState.items.forEach((it) => { if (it.k[0] !== 'r') tone(71, B + (it.t * beat) / 4 - a.currentTime, Math.max(0.12, (LEN[it.k] * beat) / 4 * 0.9)); });
+  } else if (rState.kind) {
+    const b = 60 / 80, len = LEN[rState.kind];
+    for (let k = 0; k < Math.max(4, Math.ceil(len / 4)); k++) click(t0 + k * b, k % 4 === 0, true);
+    if (rState.kind[0] !== 'r') tone(71, t0 - a.currentTime, (len * b) / 4 * 0.95);
+  }
+}
+// "How many beats" quiz
+const RVALS = [[16, '4'], [12, '3'], [8, '2'], [6, '1½'], [4, '1'], [2, '½'], [1, '¼']];
+const RPOOL = { 1: ['w', 'h', 'q', 'rw', 'rh', 'rq'], 2: ['w', 'h', 'q', 'e', 'hd', 'rw', 'rh', 'rq', 're'], 3: ['w', 'h', 'q', 'e', 's', 'hd', 'qd', 'rw', 'rh', 'rq', 're'] };
+function rValues() { const lens = new Set(RPOOL[cfg.rlevel].map((k) => LEN[k])); return RVALS.filter(([v]) => lens.has(v)); }
+function buildRKeys() {
+  const box = $('rkeys'), vals = rValues();
+  box.innerHTML = ''; box.style.gridTemplateColumns = `repeat(${vals.length}, minmax(0, 1fr))`;
+  vals.forEach(([v, lab]) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = lab; b.dataset.v = v; b.onclick = () => rAnswer(v, b); box.appendChild(b); });
+}
+function drawSingle(kind, cls = '') {
+  staff.setAttribute('viewBox', '0 22 300 112');
+  staff.innerHTML = rhythmStaff(300) + `<g class="${cls}">${glyph(kind, 170)}</g>`;
+}
+function nextRhythmValue() {
+  locked = false;
+  const pool = RPOOL[cfg.rlevel].filter((k) => k !== rState.kind);
+  const w = pool.map((k) => { const s = stats['r:' + k]; return s ? 1 + (4 * s.e) / s.n : 1.6; });
+  let r = Math.random() * w.reduce((a, b) => a + b, 0), kind = pool[pool.length - 1];
+  for (let i = 0; i < pool.length; i++) { r -= w[i]; if (r <= 0) { kind = pool[i]; break; } }
+  rState.kind = kind;
+  if ($('rkeys').children.length !== rValues().length) buildRKeys();
+  [...$('rkeys').children].forEach((b) => { b.className = ''; b.disabled = false; });
+  drawSingle(kind);
+  const fb = $('fb'); fb.className = 'feedback idle'; fb.textContent = L.rhAsk;
+  updateHUD();
+  if (!$('hint').hidden) showHint();
+}
+function rAnswer(v, btn) {
+  if (locked || $('game').hidden || cfg.rtask !== 'value') return; locked = true;
+  const kind = rState.kind, len = LEN[kind], ok = v === len;
+  const s = stats['r:' + kind] || { n: 0, e: 0 }; s.n++; if (!ok) s.e++;
+  if (s.n > 12) { s.n = Math.round(s.n * 0.75); s.e = Math.round(s.e * 0.75); }
+  stats['r:' + kind] = s; store.set('nt-stats', stats);
+  const btns = [...$('rkeys').children]; btns.forEach((b) => (b.disabled = true));
+  const right = btns.find((b) => Number(b.dataset.v) === len); if (right) right.className = 'ok';
+  if (!ok && btn) btn.className = 'bad';
+  drawSingle(kind, ok ? 'ok' : 'bad');
+  const fb = $('fb');
+  if (ok) { round.right++; fb.className = 'feedback ok'; fb.innerHTML = `<span>${L.rhOk(L.durs[kind], L.beats(len))}</span>`; }
+  else { round.misses.push({ label: L.durs[kind] }); fb.className = 'feedback bad'; fb.innerHTML = `<span>${L.rhBad(L.durs[kind], L.beats(len))}</span>`; }
+  round.i++; updateHUD();
+  timer = setTimeout(() => (round.i >= ROUND ? finish() : nextRhythmValue()), ok ? 1100 : 2400);
+}
+function buildMemo() {
+  $('memoGrid').innerHTML = ['w', 'h', 'q', 'e', 's', 'hd', 'qd', 'rw', 'rh', 'rq', 're'].map((k) => {
+    let lines = ''; for (let i = 0; i < 5; i++) lines += `<line class="line" x1="0" x2="36" y1="${BOT - i * S}" y2="${BOT - i * S}"/>`;
+    return `<div class="memo-item"><svg class="staff" viewBox="-2 38 40 72" aria-hidden="true">${lines}${glyph(k, 15)}</svg><div><b>${L.durs[k]}</b><span>${L.beats(LEN[k])}</span></div></div>`;
+  }).join('');
+}
+$('rStart').onclick = rStart;
+$('rRetry').onclick = () => { rState.phase = 'idle'; rStart(); };
+$('rNext').onclick = rNext;
+$('tapBtn').addEventListener('pointerdown', (e) => { e.preventDefault(); rTap(); });
+buildMemo();
 
 // ---------- controls ----------
 NAMES.forEach((n, i) => {
@@ -556,8 +868,14 @@ function bindSeg(id, prop) {
   sync();
 }
 function applyMode() {
-  const ear = cfg.mode === 'ear', ch = cfg.mode === 'chords', sc = cfg.mode === 'scales';
-  $('row-clef').hidden = ear || ch || sc; $('row-range').hidden = ear || ch || sc;
+  const ear = cfg.mode === 'ear', ch = cfg.mode === 'chords', sc = cfg.mode === 'scales', rh = cfg.mode === 'rhythm', tap = rh && cfg.rtask === 'tap';
+  $('row-clef').hidden = ear || ch || sc || rh; $('row-range').hidden = ear || ch || sc || rh;
+  $('row-rtask').hidden = !rh; $('row-rlevel').hidden = !rh;
+  $('row-tempo').hidden = !(sc || tap); $('metroBtn').hidden = !sc; $('row-sub').hidden = !sc;
+  $('rkeys').hidden = !rh || tap; $('tapBox').hidden = !tap; $('memo').hidden = !rh;
+  if (!sc) stopMetro();
+  rClear();
+  if (rh && !tap) buildRKeys();
   ['row-ctype', 'row-task'].forEach((id) => ($(id).hidden = !ch));
   $('row-hand').hidden = !(ch || sc); $('row-piece').hidden = !sc;
   $('h-both').hidden = !sc;
@@ -565,12 +883,14 @@ function applyMode() {
     cfg.hand = 'R'; store.set('nt-cfg', cfg);
     $('seg-hand').querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === 'R')));
   }
-  $('keys').hidden = ch || sc; $('piano').hidden = !(ch || sc);
+  $('keys').hidden = ch || sc || rh; $('piano').hidden = !(ch || sc);
   $('task').hidden = !(ch || sc); $('finger').hidden = !(ch || sc);
-  ROUND = ch ? 10 : 20;
+  ROUND = ch ? 10 : tap ? 8 : 20;
 }
 bindSeg('seg-mode', 'mode'); bindSeg('seg-clef', 'clef'); bindSeg('seg-range', 'range'); bindSeg('seg-oct', 'oct');
 bindSeg('seg-hand', 'hand'); bindSeg('seg-task', 'ctask'); bindSeg('seg-piece', 'piece');
+bindSeg('seg-rtask', 'rtask'); bindSeg('seg-rlevel', 'rlevel'); bindSeg('seg-sub', 'sub');
+$('bpmOut').textContent = cfg.bpm;
 (() => {
   const seg = $('seg-ctype');
   const sync = () => seg.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(cfg.ctypes.includes(b.dataset.v))));
@@ -616,6 +936,7 @@ function onMidi(e) {
   const [s, n, v] = e.data, cmd = s & 0xf0;
   const on = cmd === 0x90 && v > 0, off = cmd === 0x80 || (cmd === 0x90 && v === 0);
   if (cfg.mode === 'scales') { if (on) seqPress(n); return; }
+  if (cfg.mode === 'rhythm') { if (on && cfg.rtask === 'tap') rTap(); return; }
   if (cfg.mode === 'chords') { if (on || off) chordMidi(on, n); return; }
   if (on) submit({ midi: n });
 }
@@ -626,6 +947,16 @@ $('hintBtn').onclick = () => { const h = $('hint'); h.hidden = !h.hidden; if (!h
 $('restart').onclick = newRound;
 document.addEventListener('keydown', (e) => {
   if (e.target.closest('input, textarea, select')) return;
+  if (cfg.mode === 'rhythm') {
+    if (cfg.rtask === 'tap') {
+      if (e.code === 'Space' && !e.repeat) { e.preventDefault(); rTap(); }
+      else if (e.key === 'Enter' && !e.target.closest('button, summary, a')) { if (!$('rNext').hidden) rNext(); else rStart(); }
+    } else {
+      const i = '1234567'.indexOf(e.key), b = $('rkeys').children[i];
+      if (b && !$('game').hidden) rAnswer(Number(b.dataset.v), b);
+    }
+    return;
+  }
   if (cfg.mode === 'chords') {
     if (e.key === 'Enter' && !e.target.closest('button, summary, a')) { if (!$('nextBtn').hidden) goNext(); else checkChord([...sel], false); }
     return;
@@ -638,6 +969,7 @@ round = { i: 0, right: 0, misses: [] };
 cur = pick(null); locked = false;
 if (cfg.mode === 'chords') nextChord();
 else if (cfg.mode === 'scales') startSeq();
+else if (cfg.mode === 'rhythm') next();
 else {
   drawStaff(cur.clef, cur.pos, '', cfg.mode === 'ear');
   $('fb').textContent = cfg.mode === 'ear' ? L.askEarStart : L.ask;
