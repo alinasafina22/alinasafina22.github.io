@@ -695,14 +695,16 @@ function genBar() {
 const RW = 350, RX0 = 62, RSPAN = 262;
 const rx = (t) => RX0 + (t / 16) * RSPAN + 10;
 function drawBar(items, results) {
-  staff.setAttribute('viewBox', `0 22 ${RW} ${results ? 132 : 112}`);
+  staff.setAttribute('viewBox', `0 22 ${RW} ${results ? 146 : 128}`);
   let h = rhythmStaff(RW);
+  // beat numbers under the staff, so it's clear where each note falls
+  for (let k = 0; k < 4; k++) h += `<text class="beatnum" x="${rx(k * 4) + 3}" y="${BOT + 18}" text-anchor="middle">${k + 1}</text>`;
   const groups = {};
   items.forEach((it) => { if (it.beam) (groups[it.cell] = groups[it.cell] || []).push(it); });
   items.forEach((it, idx) => {
     const res = results && results[idx], cls = res ? (res === 'ok' ? 'ok' : 'bad') : '';
-    h += `<g class="${cls}">${glyph(it.k, rx(it.t), MID - STEM, !it.beam)}</g>`;
-    if (res) h += `<text class="rmark ${res === 'ok' ? 'ok' : 'bad'}" x="${rx(it.t) + 3}" y="${BOT + 24}" text-anchor="middle">${L.marks[res]}</text>`;
+    h += `<g class="${cls}" data-idx="${idx}">${glyph(it.k, rx(it.t), MID - STEM, !it.beam)}</g>`;
+    if (res) h += `<text class="rmark ${res === 'ok' ? 'ok' : 'bad'}" x="${rx(it.t) + 3}" y="${BOT + 36}" text-anchor="middle">${L.marks[res]}</text>`;
   });
   Object.values(groups).forEach((g) => {
     const top = MID - STEM, xs = g.map((it) => rx(it.t) + 6.4);
@@ -717,35 +719,59 @@ function drawBar(items, results) {
     });
     h += '</g>';
   });
+  h += `<line class="playhead" id="rhPlayhead" x1="0" x2="0" y1="${BOT - 4 * S - 6}" y2="${BOT + 6}" visibility="hidden"/>`;
   staff.innerHTML = h;
 }
-const rState = { items: [], phase: 'idle', B: 0, beat: 0.75, taps: [], scored: false, timers: [], sig: '', kind: null };
+const rState = { items: [], phase: 'idle', B: 0, beat: 0.75, taps: [], scored: false, timers: [], sig: '', kind: null, raf: 0, results: null };
+// A line that runs through the bar in time; with light=true each note lights up as it sounds.
+function runPlayhead(B, beat, light) {
+  cancelAnimationFrame(rState.raf);
+  const ph = $('rhPlayhead'); if (!ph) return;
+  const lit = new Set();
+  const frame = () => {
+    const pos = (ac.currentTime - latency() - B) / (4 * beat);
+    if (pos > 1.02) { ph.setAttribute('visibility', 'hidden'); staff.querySelectorAll('g.now').forEach((g) => g.classList.remove('now')); return; }
+    if (pos >= 0) {
+      const x = rx(16 * Math.min(pos, 1)) + 3;
+      ph.setAttribute('x1', x); ph.setAttribute('x2', x); ph.setAttribute('visibility', 'visible');
+      if (light) rState.items.forEach((it, idx) => {
+        if (it.k[0] === 'r' || lit.has(idx) || pos * 16 < it.t) return;
+        lit.add(idx); staff.querySelectorAll('g.now').forEach((g) => g.classList.remove('now'));
+        const g = staff.querySelector(`g[data-idx="${idx}"]`); if (g) g.classList.add('now');
+      });
+    }
+    rState.raf = requestAnimationFrame(frame);
+  };
+  rState.raf = requestAnimationFrame(frame);
+}
 function rClear() {
+  cancelAnimationFrame(rState.raf);
   rState.timers.forEach(clearTimeout); rState.timers = [];
   scheduled.forEach((o) => { try { o.stop(); } catch {} }); scheduled.length = 0;
   if (metro.run) { /* the scales metronome is stopped outside scales mode */ }
 }
 function nextTapBar() {
   rClear(); clearTimeout(timer);
-  rState.items = genBar(); rState.phase = 'idle'; rState.scored = false; rState.taps = [];
+  rState.items = genBar(); rState.phase = 'idle'; rState.scored = false; rState.taps = []; rState.results = null;
   drawBar(rState.items);
   const fb = $('fb'); fb.className = 'feedback idle'; fb.textContent = L.tapIdle;
-  $('rStart').hidden = false; $('rRetry').hidden = true; $('rNext').hidden = true;
+  $('rStart').hidden = false; $('rListen').hidden = false; $('rRetry').hidden = true; $('rNext').hidden = true;
   updateHUD();
   if (!$('hint').hidden) showHint();
 }
 function rStart() {
   if (rState.phase === 'count' || rState.phase === 'play') return;
   const a = ctx(); if (!a) return;
-  rClear(); drawBar(rState.items);
+  rClear(); rState.results = null; drawBar(rState.items);
   const beat = 60 / cfg.bpm, t0 = a.currentTime + 0.25;
   rState.beat = beat; rState.B = t0 + 4 * beat; rState.taps = []; rState.phase = 'count';
+  runPlayhead(rState.B, beat, false);
   for (let k = 0; k < 8; k++) click(t0 + k * beat, k % 4 === 0, k >= 4);
   const fb = $('fb'); fb.className = 'feedback idle';
   for (let k = 0; k < 4; k++) rState.timers.push(setTimeout(() => (fb.innerHTML = `<span class="big">${k + 1}</span>`), (t0 + k * beat - a.currentTime) * 1000));
   rState.timers.push(setTimeout(() => { rState.phase = 'play'; fb.innerHTML = `<span class="big">${L.tapNow}</span>`; }, (rState.B - a.currentTime - 0.05) * 1000));
   rState.timers.push(setTimeout(rEvaluate, (rState.B + 4 * beat + 0.35 * beat - a.currentTime) * 1000));
-  $('rStart').hidden = true; $('rRetry').hidden = true; $('rNext').hidden = true;
+  $('rStart').hidden = true; $('rListen').hidden = true; $('rRetry').hidden = true; $('rNext').hidden = true;
 }
 function rTap() {
   const b = $('tapBtn'); b.classList.add('hit'); setTimeout(() => b.classList.remove('hit'), 90);
@@ -773,14 +799,14 @@ function rEvaluate() {
   });
   const ok = exp.filter((e) => results[e.idx] === 'ok').length, extra = taps.length - used.size;
   const perfect = ok === exp.length && extra === 0;
-  drawBar(items, results);
+  rState.results = results; drawBar(items, results);
   const fb = $('fb'); fb.className = 'feedback ' + (perfect ? 'ok' : 'bad'); fb.innerHTML = `<span>${L.tapResult(ok, exp.length, extra)}</span>`;
   if (!rState.scored) {
     rState.scored = true; round.i++;
     if (perfect) round.right++;
     const s = stats['r:tap' + cfg.rlevel] || { n: 0, e: 0 }; s.n++; if (!perfect) s.e++; stats['r:tap' + cfg.rlevel] = s; store.set('nt-stats', stats);
   }
-  $('rRetry').hidden = false; $('rNext').hidden = false;
+  $('rRetry').hidden = false; $('rNext').hidden = false; $('rListen').hidden = false;
   updateHUD();
 }
 function rNext() { if (round.i >= ROUND) finish(); else nextTapBar(); }
@@ -789,9 +815,17 @@ function playRhythm() {
   rClear();
   const beat = 60 / cfg.bpm, t0 = a.currentTime + 0.2;
   if (cfg.rtask === 'tap') {
+    if (rState.phase === 'count' || rState.phase === 'play') return;
+    const was = rState.phase; rState.phase = 'listen';
+    drawBar(rState.items, rState.results);
     for (let k = 0; k < 8; k++) click(t0 + k * beat, k % 4 === 0, k >= 4);
     const B = t0 + 4 * beat;
     rState.items.forEach((it) => { if (it.k[0] !== 'r') tone(71, B + (it.t * beat) / 4 - a.currentTime, Math.max(0.12, (LEN[it.k] * beat) / 4 * 0.9)); });
+    runPlayhead(B, beat, true);
+    const fb = $('fb'), before = fb.innerHTML, beforeCls = fb.className; fb.className = 'feedback idle';
+    for (let k = 0; k < 4; k++) rState.timers.push(setTimeout(() => (fb.innerHTML = `<span class="big">${k + 1}</span>`), (t0 + k * beat - a.currentTime) * 1000));
+    rState.timers.push(setTimeout(() => (fb.innerHTML = `<span class="big">${L.listening}</span>`), (B - a.currentTime) * 1000));
+    rState.timers.push(setTimeout(() => { rState.phase = was; fb.className = beforeCls; fb.innerHTML = before; }, (B + 4 * beat + 0.3 - a.currentTime) * 1000));
   } else if (rState.kind) {
     const b = 60 / 80, len = LEN[rState.kind];
     for (let k = 0; k < Math.max(4, Math.ceil(len / 4)); k++) click(t0 + k * b, k % 4 === 0, true);
@@ -848,6 +882,7 @@ function buildMemo() {
   }).join('');
 }
 $('rStart').onclick = rStart;
+$('rListen').onclick = playRhythm;
 $('rRetry').onclick = () => { rState.phase = 'idle'; rStart(); };
 $('rNext').onclick = rNext;
 $('tapBtn').addEventListener('pointerdown', (e) => { e.preventDefault(); rTap(); });
