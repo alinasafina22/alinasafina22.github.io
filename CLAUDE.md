@@ -86,7 +86,9 @@ quotes:
 
 Поля: `title`, `description`, `image` + `imageAlt`, `url`, `date`, `featured: true` (показывать на главной).
 
-Свои самодельные страницы (тренажёры, игрушки) кладутся готовым HTML в `public/tools/<имя>/index.html` и открываются по адресу `/tools/<имя>/`. Чтобы они появились в находках, укажи в `url` этот путь: `url: /tools/notes-trainer/`. В карточке будет «здесь, на сайте», а на странице — кнопка «Открыть».
+Свои страницы-приложения делаются как тренажёр нот: вид в `src/views/NotesTrainer.astro`, тексты на двух языках в `src/i18n/notes-trainer.ts`, логика в `src/scripts/notes-trainer.ts`, обёртки в `src/pages/tools/` и `src/pages/ru/tools/`. Цвета «верно» и «ошибка» — `--color-success` и `--color-error` в `tokens.css`.
+
+Чтобы страница появилась в находках, укажи в `url` путь без языка: `url: /tools/notes-trainer/`. Русская версия находки сама поведёт на `/ru/tools/…`. В карточке будет «здесь, на сайте», а на странице — кнопка «Открыть».
 
 ### Рецепт — `src/content/recipes/`
 

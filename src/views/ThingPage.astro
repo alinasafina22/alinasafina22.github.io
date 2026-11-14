@@ -37,7 +37,7 @@ const { Content } = await render(thing.source);
         d.url &&
           (isLocalUrl(d.url) ? (
             <p class="source">
-              <a href={d.url}>
+              <a href={localePath(locale, d.url)}>
                 {t('things.open')} <span aria-hidden="true">→</span>
               </a>
             </p>
