@@ -5,3 +5,7 @@ summary: "A group of classics students at an elite Vermont college live apart fr
 ---
 
 Interesting plot and a lovely writing style, but for me the book dragged on far too long.
+
+I liked the atmosphere: university life and young students who are passionate about their studies. But the events unfolded very slowly.
+
+I definitely wouldn't reread it.
