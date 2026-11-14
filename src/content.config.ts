@@ -148,7 +148,8 @@ const things = defineCollection({
       description: z.string().optional(),
       image: image().optional(),
       imageAlt: z.string().optional(),
-      url: z.url().optional(),
+      // A full address, or a path on this site (e.g. /tools/notes-trainer/ for a page in public/).
+      url: z.union([z.url(), z.string().regex(/^\/(?!\/)/)]).optional(),
       date: z.coerce.date(),
       tags,
       featured: z.boolean().default(false),

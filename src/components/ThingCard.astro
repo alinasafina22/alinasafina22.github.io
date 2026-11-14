@@ -4,7 +4,7 @@ import type { Localized } from '../i18n/content';
 import { localePath, toLocale, useTranslations } from '../i18n/ui';
 import DateLabel from './DateLabel.astro';
 import Doodle from './Doodle.astro';
-import { hostOf } from '../utils/format';
+import { hostOf, isLocalUrl } from '../utils/format';
 
 interface Props {
   thing: Localized<'things'>;
@@ -41,7 +41,7 @@ const accent = ACCENTS[[...d.title].reduce((h, c) => h + c.charCodeAt(0), 0) % A
     </div>
     <h3 class="title"><a href={localePath(locale, `/things/${thing.id}/`)}>{d.title}</a></h3>
     {d.description && <p class="desc">{d.description}</p>}
-    {d.url && <p class="host meta">↗ {hostOf(d.url)}</p>}
+    {d.url && <p class="host meta">↗ {isLocalUrl(d.url) ? t('things.onSite') : hostOf(d.url)}</p>}
   </div>
 </article>
 

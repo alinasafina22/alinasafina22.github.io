@@ -25,6 +25,8 @@
   --color-card: #faf7f0;
   --color-sage-deep: #6e9467; /* chart bars: sage dark enough for 3:1 contrast on paper */
   --color-focus: #3f6b8a;
+  --color-success: #4a7a43; /* right answers (notes trainer) */
+  --color-error: #a8473d; /* wrong answers */
 
   /* Fonts. Bricolage Grotesque has no Cyrillic, so Russian headings fall back to Inter. */
   --font-display: 'Bricolage Grotesque Variable', 'Inter Variable', system-ui, sans-serif;
@@ -120,6 +122,8 @@
   --color-card: #343632;
   --color-sage-deep: #8ab384;
   --color-focus: #8cbbe0;
+  --color-success: #9cc794;
+  --color-error: #eb9a90;
 
   color-scheme: dark;
 }
@@ -142,6 +146,8 @@
     --color-card: #343632;
     --color-sage-deep: #8ab384;
     --color-focus: #8cbbe0;
+    --color-success: #9cc794;
+    --color-error: #eb9a90;
 
     color-scheme: dark;
   }
@@ -165,6 +171,8 @@
   --color-card: #45252b;
   --color-sage-deep: #a6c99a;
   --color-focus: #9cc6ea;
+  --color-success: #b3d6a7;
+  --color-error: #ffb1a7;
 
   color-scheme: dark;
 }

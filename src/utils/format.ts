@@ -51,3 +51,6 @@ export const hostOf = (url: string) => {
     return url;
   }
 };
+
+/** A link inside this site (a root-relative path), as opposed to an outside address. */
+export const isLocalUrl = (url: string) => url.startsWith('/') && !url.startsWith('//');
