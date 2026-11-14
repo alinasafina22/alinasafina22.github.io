@@ -214,7 +214,7 @@ function bkey() {
 function showHint() {
   const h = $('hint');
   if (cfg.mode === 'scales') {
-    h.innerHTML = cfg.piece[0] === 'h' ? L.hintHanon : cfg.piece === 'F' ? L.hintScaleF : L.hintScale;
+    h.innerHTML = (cfg.piece[0] === 'h' ? L.hintHanon : cfg.piece === 'F' ? L.hintScaleF : L.hintScale) + (cfg.hand === 'B' ? ' ' + L.hintBoth : '');
     return;
   }
   if (cfg.mode === 'chords') {
@@ -349,6 +349,7 @@ function drawPiano(reveal, played) {
     } else if (m === 60 && isW) lab = `<text class="c4" x="${x + W / 2}" y="93" text-anchor="middle">${L.middleC}</text>`;
     if (isW) { whites += rect + lab; wx++; } else blacks += rect + lab;
   }
+  $('pianoSvg').setAttribute('viewBox', '0 0 300 100');
   $('pianoSvg').innerHTML = whites + blacks;
 }
 function checkChord(list, fromMidi) {
@@ -420,10 +421,11 @@ const HANON = {
   h2: { o: [0, 2, 5, 4, 3, 4, 3, 2], rh: [1, 2, 5, 4, 3, 4, 3, 2], lh: [5, 3, 1, 2, 3, 2, 3, 4] },
 };
 const BAR = 8;
-let seq = [], seqErr = [], seqLast = null, seqFlash = null, seqTimer, seqDone = false;
+// A step is one note per playing hand: [{d, alt, f, hand}], right hand first.
+let seq = [], seqErr = [], seqHit = new Set(), seqLast = new Set(), seqFlash = null, seqTimer, seqDone = false;
 
-function buildSeq() {
-  const right = cfg.hand === 'R', shift = right ? 0 : -7, out = [];
+function handLine(right) {
+  const shift = right ? 0 : -7, out = [];
   if (HANON[cfg.piece]) {
     const h = HANON[cfg.piece], d0 = 28 + shift;
     for (let k = 0; k < 7; k++) h.o.forEach((o, j) => out.push({ d: d0 + k + o, alt: 0, f: (right ? h.rh : h.lh)[j] }));
@@ -435,74 +437,100 @@ function buildSeq() {
   const upNotes = sc.s.map((semi, k) => ({ ...up(t, k, semi), f: fu[k] }));
   return [...upNotes, ...upNotes.slice(0, 7).reverse()];
 }
+function buildSeq() {
+  const hands = cfg.hand === 'B' ? ['R', 'L'] : [cfg.hand === 'L' ? 'L' : 'R'];
+  const lines = hands.map((h) => handLine(h === 'R').map((n) => ({ ...n, hand: h })));
+  return lines[0].map((_, i) => lines.map((l) => l[i]));
+}
+const stepNames = (step) => step.map(nm).join(' + ');
 function startSeq() {
   clearTimeout(seqTimer); clearTimeout(timer);
-  locked = false; seqDone = false; seqLast = null; seqFlash = null;
+  locked = false; seqDone = false; seqHit = new Set(); seqLast = new Set(); seqFlash = null;
   seq = buildSeq(); seqErr = seq.map(() => false);
   ROUND = seq.length;
-  $('task').innerHTML = `<b>${L.pieces[cfg.piece] || L.pieces.C}</b><span>${cfg.piece[0] === 'h' ? L.hanonSub : L.scaleSub} · ${L.handSub(cfg.hand === 'R')}</span>`;
+  $('task').innerHTML = `<b>${L.pieces[cfg.piece] || L.pieces.C}</b><span>${cfg.piece[0] === 'h' ? L.hanonSub : L.scaleSub} · ${L.handSub(cfg.hand)}</span>`;
   $('check').hidden = true; $('clear').hidden = true; $('nextBtn').hidden = true;
   const fb = $('fb'); fb.className = 'feedback idle';
-  fb.textContent = midiAccess && midiAccess.inputs.size ? L.seqAskMidi : L.seqAsk;
+  fb.textContent = midiAccess && midiAccess.inputs.size ? L.seqAskMidi : cfg.hand === 'B' ? L.seqAskBoth : L.seqAsk;
   renderSeq();
   updateHUD();
   if (!$('hint').hidden) showHint();
 }
-function renderSeq() {
-  const i = Math.min(round.i, seq.length - 1), start = Math.floor(i / BAR) * BAR, bar = seq.slice(start, start + BAR);
-  const clef = cfg.hand === 'L' ? 'bass' : 'treble', X0 = 82, DX = 27;
-  staff.setAttribute('viewBox', '0 -30 300 206');
+// One staff of the current bar: notes, accidentals and fingers (above for the right hand, below for the left).
+function seqStaff(clef, notes, start, above) {
+  const X0 = 82, DX = 27;
   let h = staffBase(clef);
-  bar.forEach((n, j) => {
+  notes.forEach((n, j) => {
     const idx = start + j, x = X0 + j * DX, p = n.d - BASE[clef], y = BOT - (p * S) / 2;
-    const state = idx < round.i ? 'ok' : idx === round.i && !seqDone ? 'cur' : '';
-    if (state === 'cur') h += `<rect class="cur-mark" x="${x - 12}" y="${Math.min(y, BOT - 4 * S) - 30}" width="24" height="${Math.max(y, BOT) - Math.min(y, BOT - 4 * S) + 60}" rx="6"/>`;
+    const now = idx === round.i && !seqDone, hit = now && seqHit.has(midiN(n));
+    const state = idx < round.i || hit ? 'ok' : now ? 'cur' : '';
+    if (now) h += `<rect class="cur-mark" x="${x - 12}" y="${Math.min(y, BOT - 4 * S) - 30}" width="24" height="${Math.max(y, BOT) - Math.min(y, BOT - 4 * S) + 60}" rx="6"/>`;
     h += noteAt(x, p, 'note ' + state);
     if (n.alt) h += `<text class="acc sm" x="${x - 13}" y="${y + (n.alt > 0 ? 5 : 3)}" text-anchor="middle">${n.alt > 0 ? '♯' : '♭'}</text>`;
-    const fy = cfg.hand === 'R' ? Math.min(y - 13, BOT - 4 * S - 8) : Math.max(y + 22, BOT + 20);
-    const fc = idx < round.i ? ' done' : idx === round.i ? ' now' : '';
+    const fy = above ? Math.min(y - 13, BOT - 4 * S - 8) : Math.max(y + 22, BOT + 20);
+    const fc = idx < round.i ? ' done' : now ? ' now' : '';
     h += `<text class="fing${fc}" x="${x}" y="${fy}" text-anchor="middle">${n.f}</text>`;
   });
-  staff.innerHTML = h;
+  return h;
+}
+const GRAND = 96; // distance between the treble and bass staves in two-hand mode
+function renderSeq() {
+  const i = Math.min(round.i, seq.length - 1), start = Math.floor(i / BAR) * BAR, bar = seq.slice(start, start + BAR);
+  if (cfg.hand === 'B') {
+    staff.setAttribute('viewBox', `0 -30 300 ${206 + GRAND}`);
+    staff.innerHTML =
+      seqStaff('treble', bar.map((st) => st[0]), start, true) +
+      `<g transform="translate(0 ${GRAND})">${seqStaff('bass', bar.map((st) => st[1]), start, false)}</g>` +
+      `<line class="line" x1="8" x2="8" y1="${BOT - 4 * S}" y2="${BOT + GRAND}"/>`;
+  } else {
+    staff.setAttribute('viewBox', '0 -30 300 206');
+    staff.innerHTML = seqStaff(cfg.hand === 'L' ? 'bass' : 'treble', bar.map((st) => st[0]), start, cfg.hand !== 'L');
+  }
   const cur = seq[round.i];
-  $('finger').innerHTML = cur && !seqDone ? L.seqFinger(cur.f) : '';
+  $('finger').innerHTML = cur && !seqDone ? L.seqFinger(cur.map((n) => [n.hand, n.f])) : '';
   drawSeqPiano();
 }
 function drawSeqPiano() {
-  const lo = cfg.hand === 'L' ? 48 : 60, hi = lo + 24, W = 20, cur = !seqDone && seq[round.i];
-  const tm = cur ? midiN(cur) : null;
+  const both = cfg.hand === 'B', lo = cfg.hand === 'R' ? 60 : 48, hi = lo + (both ? 36 : 24), W = 20;
+  const cur = !seqDone && seq[round.i];
+  const target = new Map(cur ? cur.filter((n) => !seqHit.has(midiN(n))).map((n) => [midiN(n), n.f]) : []);
   let wx = 0, whites = '', blacks = '';
   for (let m = lo; m <= hi; m++) {
     const isW = WHITE.includes(m % 12), x = isW ? wx * W : wx * W - 6;
     let cls = 'pk ' + (isW ? 'w' : 'b');
     if (m === seqFlash) cls += ' wrong';
-    else if (m === tm) cls += ' sel';
-    else if (m === seqLast) cls += ' good';
+    else if (target.has(m)) cls += ' sel';
+    else if (seqLast.has(m) || seqHit.has(m)) cls += ' good';
     const rect = isW
       ? `<rect class="${cls}" data-m="${m}" x="${x + 0.5}" y=".5" width="${W - 1}" height="99" rx="3"/>`
       : `<rect class="${cls}" data-m="${m}" x="${x}" y=".5" width="12" height="60" rx="2"/>`;
     let lab = '';
-    if (m === tm) {
+    if (target.has(m)) {
       const cx = isW ? x + W / 2 : x + 6, cy = isW ? 84 : 48, r = isW ? 7.5 : 5.8;
-      lab = `<circle class="fc" cx="${cx}" cy="${cy}" r="${r}"/><text class="ft" x="${cx}" y="${cy + 3.6}" text-anchor="middle">${cur.f}</text>`;
+      lab = `<circle class="fc" cx="${cx}" cy="${cy}" r="${r}"/><text class="ft" x="${cx}" y="${cy + 3.6}" text-anchor="middle">${target.get(m)}</text>`;
     } else if (m === 60 && isW) lab = `<text class="c4" x="${x + W / 2}" y="93" text-anchor="middle">${L.middleC}</text>`;
     if (isW) { whites += rect + lab; wx++; } else blacks += rect + lab;
   }
-  $('pianoSvg').innerHTML = whites + blacks;
+  const svg = $('pianoSvg');
+  svg.setAttribute('viewBox', `0 0 ${wx * W} 100`);
+  svg.innerHTML = whites + blacks;
 }
 function seqPress(m) {
   if (seqDone || $('game').hidden || !seq.length) return;
   tone(m, 0, 0.6);
   const cur = seq[round.i], fb = $('fb');
-  if (m === midiN(cur)) {
+  if (seqHit.has(m)) return;
+  if (cur.some((n) => midiN(n) === m)) {
+    seqHit.add(m); seqFlash = null;
+    if (seqHit.size < cur.length) { renderSeq(); return; }
     if (!seqErr[round.i]) round.right++;
-    seqLast = m; seqFlash = null; round.i++;
-    fb.className = 'feedback ok'; fb.innerHTML = `<span>${L.seqOk(nm(cur), cur.f)}</span>`;
+    seqLast = new Set(seqHit); seqHit = new Set(); round.i++;
+    fb.className = 'feedback ok'; fb.innerHTML = `<span>${L.seqOk(cur.map((n) => [n.hand, nm(n), n.f]))}</span>`;
     if (round.i >= seq.length) { seqDone = true; renderSeq(); updateHUD(); timer = setTimeout(finish, 900); return; }
   } else {
-    if (!seqErr[round.i]) round.misses.push({ label: nm(cur) });
+    if (!seqErr[round.i]) round.misses.push({ label: stepNames(cur) });
     seqErr[round.i] = true; seqFlash = m;
-    fb.className = 'feedback bad'; fb.innerHTML = `<span>${L.seqBad(nm(cur), cur.f)}</span>`;
+    fb.className = 'feedback bad'; fb.innerHTML = `<span>${L.seqBad(cur.map((n) => [n.hand, nm(n), n.f]))}</span>`;
     clearTimeout(seqTimer); seqTimer = setTimeout(() => { seqFlash = null; drawSeqPiano(); }, 500);
   }
   renderSeq(); updateHUD();
@@ -510,7 +538,7 @@ function seqPress(m) {
 function playBar() {
   if (!seq.length) return;
   const from = Math.min(round.i, seq.length - 1), end = Math.floor(from / BAR) * BAR + BAR;
-  seq.slice(from, end).forEach((n, k) => tone(midiN(n), k * 0.32, 0.5));
+  seq.slice(from, end).forEach((step, k) => step.forEach((n) => tone(midiN(n), k * 0.32, 0.5)));
 }
 
 // ---------- controls ----------
@@ -532,6 +560,11 @@ function applyMode() {
   $('row-clef').hidden = ear || ch || sc; $('row-range').hidden = ear || ch || sc;
   ['row-ctype', 'row-task'].forEach((id) => ($(id).hidden = !ch));
   $('row-hand').hidden = !(ch || sc); $('row-piece').hidden = !sc;
+  $('h-both').hidden = !sc;
+  if (!sc && cfg.hand === 'B') {
+    cfg.hand = 'R'; store.set('nt-cfg', cfg);
+    $('seg-hand').querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === 'R')));
+  }
   $('keys').hidden = ch || sc; $('piano').hidden = !(ch || sc);
   $('task').hidden = !(ch || sc); $('finger').hidden = !(ch || sc);
   ROUND = ch ? 10 : 20;
