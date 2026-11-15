@@ -129,6 +129,18 @@ const named = item.creator ? t('item.by', { title: item.title, creator: item.cre
     }
 
     {
+      hasBody && (
+        <section class="block" aria-labelledby="review">
+          <h2 id="review">{reviewHeading}</h2>
+          {item.bodyLang !== locale && <p class="meta original">{t('item.originalLang', { lang: t(`lang.name.${item.bodyLang}`) })}</p>}
+          <div class="prose" lang={item.bodyLang}>
+            <Content />
+          </div>
+        </section>
+      )
+    }
+
+    {
       item.quotes.length > 0 && (
         <section class="block" aria-labelledby="quotes">
           <h2 id="quotes">{t('item.quotes')}</h2>
@@ -136,18 +148,6 @@ const named = item.creator ? t('item.by', { title: item.title, creator: item.cre
             {item.quotes.map((q) => (
               <blockquote lang={item.lang}>{q}</blockquote>
             ))}
-          </div>
-        </section>
-      )
-    }
-
-    {
-      hasBody && (
-        <section class="block" aria-labelledby="review">
-          <h2 id="review">{reviewHeading}</h2>
-          {item.bodyLang !== locale && <p class="meta original">{t('item.originalLang', { lang: t(`lang.name.${item.bodyLang}`) })}</p>}
-          <div class="prose" lang={item.bodyLang}>
-            <Content />
           </div>
         </section>
       )
@@ -252,7 +252,7 @@ const named = item.creator ? t('item.by', { title: item.title, creator: item.cre
     border-left: 3px solid var(--color-peach);
   }
 
-  /* Description, quotes and review sit in the right column, right under the tags. */
+  /* Description, review and quotes (always last) sit in the right column, right under the tags. */
   .block {
     max-width: var(--width-reading);
     margin-top: var(--space-8);
