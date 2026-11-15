@@ -6,4 +6,8 @@ quotes:
 summary: "A young woman is found murdered in an abandoned house, and she looks strikingly like former detective Cassie Maddox. Cassie returns to undercover work under the dead woman's identity, moving into her circle of friends."
 ---
 
-The beginning and the middle of the book were interesting, but the ending fell flat: far too tedious, I had to force myself to finish it. It has a *Secret History* vibe, but it doesn't quite live up to Donna Tartt's book.
+The beginning and the middle of the book were interesting, but the ending fell flat: far too tedious, I had to force myself to finish it. The plot recalls Donna Tartt's *The Secret History*, but the book doesn't quite live up to it.
+
+On the plus side, I'm glad the heroine didn't do anything as stupid as Rob did in the first book.
+
+I definitely wouldn't reread it, although one quote from it really struck me.
