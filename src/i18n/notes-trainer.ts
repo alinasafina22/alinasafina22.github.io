@@ -6,7 +6,7 @@ export type NtLocale = 'en' | 'ru';
 const SUP = ['⁰', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸'];
 
 const ru = {
-  title: 'Ноты на стане',
+  title: 'Ноты',
   lead: 'Мой тренажёр для запоминания нот на нотном стане и на фортепиано. Можно тренироваться на слух, в виде теста, а также с MIDI-клавиатурой. Ещё есть гаммы и упражнения Ганона для одной или двух рук. Рекомендую заниматься с MIDI-пианино.',
   ui: {
     mode: 'Режим', read: 'Читать ноты', ear: 'На слух', chords: 'Аккорды', scales: 'Гаммы и Ганон', rhythm: 'Ритм',
@@ -186,7 +186,7 @@ const ru = {
 };
 
 const en: typeof ru = {
-  title: 'Notes on the staff',
+  title: 'Music Notes',
   lead: 'My trainer for learning notes on the staff and on the piano. You can practise by ear, as a quiz, or with a MIDI keyboard. There are also scales and Hanon exercises for one or both hands. I recommend using a MIDI piano.',
   ui: {
     mode: 'Mode', read: 'Read notes', ear: 'By ear', chords: 'Chords', scales: 'Scales & Hanon', rhythm: 'Rhythm',
