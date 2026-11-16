@@ -6,13 +6,14 @@ export type NtLocale = 'en' | 'ru';
 const SUP = ['⁰', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸'];
 
 const ru = {
-  title: 'Ноты на стане',
+  title: 'Ноты',
   lead: 'Мой тренажёр для запоминания нот на нотном стане и на фортепиано. Можно тренироваться на слух, в виде теста, а также с MIDI-клавиатурой. Ещё есть гаммы и упражнения Ганона для одной или двух рук. Рекомендую заниматься с MIDI-пианино.',
   ui: {
     mode: 'Режим', read: 'Читать ноты', ear: 'На слух', chords: 'Аккорды', scales: 'Гаммы и Ганон', rhythm: 'Ритм',
     piece: 'Что играть',
     rtask: 'Задание', rValue: 'Сколько долей', rTap: 'Простучи ритм',
     rlevel: 'Уровень', lvl1: 'Лёгкий', lvl2: 'Средний', lvl3: 'Сложный',
+    timer: 'Таймер', timerOpts: [['0', 'Выкл'], ['60', '1 мин'], ['90', '1½ мин'], ['120', '2 мин'], ['180', '3 мин']],
     tempo: 'Темп', metro: 'Метроном', tempoDown: 'Медленнее', tempoUp: 'Быстрее', bpm: 'уд/мин',
     perBeat: 'На долю', sub1: '1 нота', sub2: '2 ноты',
     start: '▶ Старт', tap: 'Тап', retry: 'Ещё раз этот такт',
@@ -71,6 +72,8 @@ const ru = {
   wrongOctave: (n: string) => `Нота верная, но октава другая: ты сыграла ${n}`,
   played: (n: string) => `Ты сыграла ${n}`,
   best: 'Рекорд в этом режиме:',
+  timeUp: (n: number, total: number) => `Время вышло: ты успела ответить на <b>${n} из ${total}</b>.`,
+  inTime: (t: string) => `Уложилась за <b>${t}</b>.`,
   again: 'Ещё раунд',
   donePerfectChords: 'Ни одной ошибки. Попробуй другую руку или добавь новые аккорды.',
   donePerfect: 'Ни одной ошибки. Можно включать добавочные линии или второй ключ.',
@@ -183,13 +186,14 @@ const ru = {
 };
 
 const en: typeof ru = {
-  title: 'Notes on the staff',
+  title: 'Music Notes',
   lead: 'My trainer for learning notes on the staff and on the piano. You can practise by ear, as a quiz, or with a MIDI keyboard. There are also scales and Hanon exercises for one or both hands. I recommend using a MIDI piano.',
   ui: {
     mode: 'Mode', read: 'Read notes', ear: 'By ear', chords: 'Chords', scales: 'Scales & Hanon', rhythm: 'Rhythm',
     piece: 'Piece',
     rtask: 'Task', rValue: 'How many beats', rTap: 'Tap the rhythm',
     rlevel: 'Level', lvl1: 'Easy', lvl2: 'Medium', lvl3: 'Hard',
+    timer: 'Timer', timerOpts: [['0', 'Off'], ['60', '1 min'], ['90', '1½ min'], ['120', '2 min'], ['180', '3 min']],
     tempo: 'Tempo', metro: 'Metronome', tempoDown: 'Slower', tempoUp: 'Faster', bpm: 'bpm',
     perBeat: 'Per beat', sub1: '1 note', sub2: '2 notes',
     start: '▶ Start', tap: 'Tap', retry: 'Try this bar again',
@@ -246,6 +250,8 @@ const en: typeof ru = {
   wrongOctave: (n) => `Right note, wrong octave: you played ${n}`,
   played: (n) => `You played ${n}`,
   best: 'Best in this mode:',
+  timeUp: (n, total) => `Time's up: you answered <b>${n} of ${total}</b>.`,
+  inTime: (t) => `Done in <b>${t}</b>.`,
   again: 'Another round',
   donePerfectChords: 'Not a single mistake. Try the other hand or add more chord types.',
   donePerfect: 'Not a single mistake. Time to add ledger lines or the second clef.',

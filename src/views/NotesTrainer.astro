@@ -86,6 +86,12 @@ const u = L.ui;
             <button type="button" data-v="both">{u.both}</button>
           </div>
         </div>
+        <div class="row" id="row-time">
+          <span class="lab">{u.timer}</span>
+          <div class="seg" id="seg-time">
+            {u.timerOpts.map(([v, label]) => <button type="button" data-v={v}>{label}</button>)}
+          </div>
+        </div>
         <div class="row" id="row-range">
           <span class="lab">{u.range}</span>
           <div class="seg" id="seg-range">
@@ -122,7 +128,7 @@ const u = L.ui;
 
       <section class="card" aria-live="polite">
         <div class="progress">
-          <span id="count">1 / 20</span><div class="bar"><i id="bar"></i></div><span id="right">0 ✓</span>
+          <span class="clock" id="clock" hidden></span><span id="count">1 / 20</span><div class="bar"><i id="bar"></i></div><span id="right">0 ✓</span>
         </div>
         <div id="game">
           <div class="task" id="task" hidden></div>
@@ -752,6 +758,19 @@ const u = L.ui;
     color: var(--color-muted);
     margin: 0;
   }
+  /* round timer */
+  .nt .clock {
+    font-weight: 500;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .nt .clock::before {
+    content: '⏱ ';
+  }
+  .nt .clock.low {
+    color: var(--color-error);
+  }
+
   /* metronome */
   .nt .stepper {
     display: inline-flex;

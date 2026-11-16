@@ -17,7 +17,7 @@ const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
 };
-const cfg = Object.assign({ mode: 'read', clef: 'treble', range: 'staff', oct: 'exact', hand: 'R', ctask: 'name', ctypes: ['triad'], piece: 'C', bpm: 80, sub: '1', rtask: 'value', rlevel: '1' }, store.get('nt-cfg', {}));
+const cfg = Object.assign({ mode: 'read', clef: 'treble', range: 'staff', oct: 'exact', hand: 'R', ctask: 'name', ctypes: ['triad'], piece: 'C', bpm: 80, sub: '1', rtask: 'value', rlevel: '1', time: '0' }, store.get('nt-cfg', {}));
 if (!Array.isArray(cfg.ctypes) || !cfg.ctypes.length) cfg.ctypes = ['triad'];
 let stats = store.get('nt-stats', {});
 let best = store.get('nt-best', {});
@@ -116,12 +116,35 @@ function pick(prev) {
 const dOf = (n) => BASE[n.clef] + n.pos;
 const fullName = (n) => { const d = dOf(n); return L.full(NAMES[d % 7], Math.floor(d / 7)); };
 
+// ---------- round timer ----------
+// A whole round against the clock, for the quiz modes: read notes, by ear, how many beats.
+const clock = { iv: null, start: 0, end: 0, running: false };
+const timedMode = () => cfg.time !== '0' && (cfg.mode === 'read' || cfg.mode === 'ear' || (cfg.mode === 'rhythm' && cfg.rtask === 'value'));
+const mmss = (ms) => { const s = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+function startClock() {
+  stopClock();
+  if (!timedMode()) return;
+  clock.start = performance.now(); clock.end = clock.start + Number(cfg.time) * 1000; clock.running = true;
+  clock.iv = setInterval(tickClock, 200); tickClock();
+}
+function stopClock() { clearInterval(clock.iv); clock.running = false; }
+function tickClock() {
+  const rem = clock.end - performance.now(), el = $('clock');
+  el.textContent = mmss(rem); el.classList.toggle('low', rem <= 10000);
+  if (rem <= 0 && !$('game').hidden) { stopClock(); round.timeUp = true; clearTimeout(timer); locked = true; finish(); }
+}
+// The first round after the page opens starts the clock on the first answer, not before.
+function armClock() { if (timedMode() && !clock.running && round.i === 0 && !round.timeUp) startClock(); }
+const pause = (ok, long) => (timedMode() ? (ok ? 350 : long ? 1800 : 1200) : ok ? 900 : long ? 2800 : 2200);
+
 // ---------- flow ----------
 function newRound() {
-  clearTimeout(timer);
+  clearTimeout(timer); stopClock();
   round = { i: 0, right: 0, misses: [] };
   $('sum').hidden = true; $('game').hidden = false; ['keys', 'piano', 'rkeys', 'tapBox'].forEach((id) => ($(id).style.visibility = ''));
   next();
+  startClock();
+  updateHUD();
 }
 function next() {
   if (cfg.mode === 'chords') return nextChord();
@@ -153,6 +176,7 @@ function playCur() {
 function answer(step, btn) { submit({ step, btn }); }
 function submit({ step, btn, midi }) {
   if (locked || $('game').hidden) return; locked = true;
+  armClock();
   const d = dOf(cur), k = key(cur), target = midiOf(d);
   let ok, ghost = null, note = '';
   if (midi != null) {
@@ -182,9 +206,11 @@ function submit({ step, btn, midi }) {
   else { round.misses.push(cur); fb.className = 'feedback bad'; fb.innerHTML = `<span>${L.badLine(NAMES[d % 7], o)}${note ? `<small>${note}</small>` : ''}</span>`; }
   if (cfg.mode === 'read' && midi == null) tone(target);
   round.i++; updateHUD();
-  timer = setTimeout(() => (round.i >= ROUND ? finish() : next()), ok ? 900 : note ? 2800 : 2200);
+  timer = setTimeout(() => (round.i >= ROUND ? finish() : next()), pause(ok, !!note));
 }
 function finish() {
+  const wasTimed = timedMode() && (clock.running || round.timeUp), spent = performance.now() - clock.start;
+  stopClock();
   const bk = bkey();
   const prev = best[bk] || 0;
   if (round.right > prev) { best[bk] = round.right; store.set('nt-best', best); }
@@ -199,6 +225,7 @@ function finish() {
     : pct === 1 ? (cfg.mode === 'chords' ? L.donePerfectChords : L.donePerfect) : pct >= 0.8 ? L.doneGood : L.doneMore;
   const uniq = [...new Map(round.misses.map((n) => [n.label || key(n), n])).values()];
   $('sum').innerHTML = `<div class="result">${round.right}<small> / ${ROUND}</small></div>
+    ${wasTimed ? `<p class="tempo-sum">${round.timeUp ? L.timeUp(round.i, ROUND) : L.inTime(mmss(spent))}</p>` : ''}
     <p>${msg}</p>${extra}
     ${uniq.length ? `<div class="misses">${uniq.map((n) => `<span>${n.label ? n.label : fullName(n) + (cfg.clef === 'both' ? (n.clef === 'bass' ? L.bassMark : L.trebleMark) : '')}</span>`).join('')}</div>` : ''}
     <button class="tool primary" type="button" id="again">${L.again}</button>`;
@@ -212,13 +239,17 @@ function updateHUD() {
   $('right').textContent = round.right + ' ✓';
   const bk = bkey();
   $('best').innerHTML = best[bk] ? `${L.best} <b>${best[bk]} / ${ROUND}</b>` : '';
+  const c = $('clock'); c.hidden = !timedMode();
+  if (!clock.running) { c.textContent = mmss(Number(cfg.time) * 1000); c.classList.remove('low'); }
 }
 function bkey() {
-  if (cfg.mode === 'ear') return 'ear';
+  const t = timedMode() ? '-t' + cfg.time : '';
+  if (cfg.mode === 'ear') return 'ear' + t;
+  if (cfg.mode === 'rhythm' && cfg.rtask === 'value') return 'rh-value-' + cfg.rlevel + t;
   if (cfg.mode === 'scales') return 'sc-' + cfg.piece + '-' + cfg.hand;
   if (cfg.mode === 'rhythm') return 'rh-' + cfg.rtask + '-' + cfg.rlevel;
   if (cfg.mode === 'chords') return 'chords-' + cfg.hand + '-' + cfg.ctask + '-' + [...cfg.ctypes].sort().join('');
-  return cfg.mode + '-' + cfg.clef + '-' + cfg.range;
+  return cfg.mode + '-' + cfg.clef + '-' + cfg.range + t;
 }
 function showHint() {
   const h = $('hint');
@@ -827,6 +858,7 @@ function nextRhythmValue() {
 }
 function rAnswer(v, btn) {
   if (locked || $('game').hidden || cfg.rtask !== 'value') return; locked = true;
+  armClock();
   const kind = rState.kind, len = LEN[kind], ok = v === len;
   const s = stats['r:' + kind] || { n: 0, e: 0 }; s.n++; if (!ok) s.e++;
   if (s.n > 12) { s.n = Math.round(s.n * 0.75); s.e = Math.round(s.e * 0.75); }
@@ -839,7 +871,7 @@ function rAnswer(v, btn) {
   if (ok) { round.right++; fb.className = 'feedback ok'; fb.innerHTML = `<span>${L.rhOk(L.durs[kind], L.beats(len))}</span>`; }
   else { round.misses.push({ label: L.durs[kind] }); fb.className = 'feedback bad'; fb.innerHTML = `<span>${L.rhBad(L.durs[kind], L.beats(len))}</span>`; }
   round.i++; updateHUD();
-  timer = setTimeout(() => (round.i >= ROUND ? finish() : nextRhythmValue()), ok ? 1100 : 2400);
+  timer = setTimeout(() => (round.i >= ROUND ? finish() : nextRhythmValue()), timedMode() ? (ok ? 400 : 1300) : ok ? 1100 : 2400);
 }
 function buildMemo() {
   $('memoGrid').innerHTML = ['w', 'h', 'q', 'e', 's', 'hd', 'qd', 'rw', 'rh', 'rq', 're'].map((k) => {
@@ -871,6 +903,7 @@ function applyMode() {
   const ear = cfg.mode === 'ear', ch = cfg.mode === 'chords', sc = cfg.mode === 'scales', rh = cfg.mode === 'rhythm', tap = rh && cfg.rtask === 'tap';
   $('row-clef').hidden = ear || ch || sc || rh; $('row-range').hidden = ear || ch || sc || rh;
   $('row-rtask').hidden = !rh; $('row-rlevel').hidden = !rh;
+  $('row-time').hidden = !(cfg.mode === 'read' || ear || (rh && !tap));
   $('row-tempo').hidden = !(sc || tap); $('metroBtn').hidden = !sc; $('row-sub').hidden = !sc;
   $('rkeys').hidden = !rh || tap; $('tapBox').hidden = !tap; $('memo').hidden = !rh;
   if (!sc) stopMetro();
@@ -888,7 +921,7 @@ function applyMode() {
   ROUND = ch ? 10 : tap ? 8 : 20;
 }
 bindSeg('seg-mode', 'mode'); bindSeg('seg-clef', 'clef'); bindSeg('seg-range', 'range'); bindSeg('seg-oct', 'oct');
-bindSeg('seg-hand', 'hand'); bindSeg('seg-task', 'ctask'); bindSeg('seg-piece', 'piece');
+bindSeg('seg-hand', 'hand'); bindSeg('seg-task', 'ctask'); bindSeg('seg-piece', 'piece'); bindSeg('seg-time', 'time');
 bindSeg('seg-rtask', 'rtask'); bindSeg('seg-rlevel', 'rlevel'); bindSeg('seg-sub', 'sub');
 $('bpmOut').textContent = cfg.bpm;
 (() => {
