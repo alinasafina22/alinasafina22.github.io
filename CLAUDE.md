@@ -125,6 +125,8 @@ lang: ru
 - `about.md` — страница About;
 - `cv.md` — резюме на `/cv` (нет в меню и в sitemap, закрыто от поисковиков). Чтобы появилась кнопка «Download PDF», положи файл в `public/cv.pdf` (для русской версии — `public/cv-ru.pdf`).
 
+  Английский PDF уже лежит в `public/cv.pdf`. Он собирается из страницы `/cv/` по стилям печати в `src/views/Cv.astro` (две страницы A4, контакты сверху). После правок резюме пересобери его: `npm run build && node scripts/cv-pdf.mjs` (в первый раз: `npm i -D playwright && npx playwright install chromium`).
+
 ### Два языка
 
 Сайт на двух языках: английский в корне (`/notes/`), русский под `/ru/` (`/ru/notes/`). Переключатель EN · RU в шапке открывает ту же страницу на другом языке.
@@ -181,7 +183,7 @@ quotes:
 
 ## Счётчик посещений
 
-GoatCounter: без cookies и без персональных данных, баннер не нужен. Включается кодом в `src/data/analytics.ts` (`GOATCOUNTER_CODE = 'azh'`), статистика — на `https://<код>.goatcounter.com`. Пустой код — счётчик выключен. Работает только на опубликованном сайте, не в `npm run dev`.
+GoatCounter: без cookies и без персональных данных, баннер не нужен. Включается кодом в `src/data/analytics.ts` (сейчас `GOATCOUNTER_CODE = 'alinasafina22'`), статистика — на https://alinasafina22.goatcounter.com. Пустой код — счётчик выключен. Работает только на опубликованном сайте, не в `npm run dev`.
 
 ## Структура
 

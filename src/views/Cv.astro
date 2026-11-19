@@ -111,8 +111,105 @@ const { Content } = await render(page.source);
       background: #fff;
     }
 
+    /* Compact two-page layout for paper and for public/cv.pdf. */
+    @page {
+      size: A4;
+      margin: 14mm 16mm;
+    }
+
     .cv {
       padding-top: 0;
+      max-width: none;
+      display: flex;
+      flex-direction: column;
+      font-size: 10pt;
+      line-height: 1.4;
+    }
+
+    h1 {
+      order: -3;
+      font-size: 22pt;
+      margin: 0 0 2pt;
+    }
+
+    .lead {
+      order: -2;
+      font-size: 11pt;
+      margin: 0 0 6pt;
+    }
+
+    /* Contacts go to the top, in one line, the way a CV usually starts. */
+    .contacts {
+      order: -1;
+      margin: 0 0 4pt;
+    }
+
+    .contacts h2 {
+      display: none;
+    }
+
+    .contacts :global(ul.list) {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2pt 14pt;
+    }
+
+    .contacts :global(ul.list li) {
+      display: flex;
+      gap: 4pt;
+      padding: 0;
+      border: 0;
+      font-size: 9.5pt;
+    }
+
+    .contacts :global(.copy),
+    .contacts :global(.visually-hidden) {
+      display: none !important;
+    }
+
+    .cv :global(a) {
+      color: var(--color-ink);
+      text-decoration: none;
+    }
+
+    .cv :global(.prose) {
+      font-size: 10pt;
+    }
+
+    .cv :global(.prose > * + *) {
+      margin-top: 4pt;
+    }
+
+    .cv :global(.prose p),
+    .cv :global(.prose ul) {
+      margin-block: 3pt 0;
+    }
+
+    .cv :global(.prose li) {
+      margin: 0;
+    }
+
+    .cv :global(.prose h2) {
+      font-size: 13pt;
+      margin-top: 12pt;
+      padding-bottom: 2pt;
+      break-after: avoid;
+    }
+
+    .cv :global(.prose h3) {
+      font-size: 11pt;
+      margin-top: 10pt;
+      break-after: avoid;
+    }
+
+    .cv :global(.prose h3 + p) {
+      margin-top: 0;
+      break-after: avoid;
+    }
+
+    .cv :global(.prose li),
+    .cv :global(.prose p) {
+      break-inside: avoid;
     }
   }
 </style>
