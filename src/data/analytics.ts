@@ -6,4 +6,4 @@
  * and put it here. Stats are then at https://<code>.goatcounter.com.
  * Leave it empty to keep the counter off.
  */
-export const GOATCOUNTER_CODE = '';
+export const GOATCOUNTER_CODE = 'alinasafina22';
