@@ -5,9 +5,11 @@ import { profileLinks, hasEmail } from '../data/contacts';
 interface Props {
   /** 'list' for About and CV, 'inline' for the footer. */
   variant?: 'list' | 'inline';
+  /** Only work contacts (no personal profiles such as Instagram), for the CV. */
+  workOnly?: boolean;
 }
-const { variant = 'list' } = Astro.props;
-const links = profileLinks();
+const { variant = 'list', workOnly = false } = Astro.props;
+const links = profileLinks(workOnly);
 import { toLocale, useTranslations } from '../i18n/ui';
 const t = useTranslations(toLocale(Astro.currentLocale));
 ---
