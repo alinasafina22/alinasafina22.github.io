@@ -152,7 +152,9 @@ function scaleKeys(tonic: number, semis: number[]) {
           <svg class="staff" id="staff" viewBox="0 0 300 150" role="img" aria-label={u.staffAria}></svg>
           <div class="feedback idle" id="fb">{L.ask}</div>
           <div class="tools find-tools" id="findTools" hidden>
+            <button class="tool arrow" id="findDown" type="button" aria-label={u.noteDown}>▼</button>
             <button class="tool primary" id="findCheck" type="button">{u.check}</button>
+            <button class="tool arrow" id="findUp" type="button" aria-label={u.noteUp}>▲</button>
           </div>
         </div>
         <div class="summary" id="sum" hidden></div>
@@ -912,6 +914,21 @@ function scaleKeys(tonic: number, semis: number[]) {
   }
   .nt .find-tools {
     justify-content: center;
+    align-items: stretch;
+    gap: var(--space-3);
+  }
+  .nt .find-tools .tool {
+    min-height: 52px;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .nt .find-tools .arrow:active {
+    background: var(--color-oat);
+  }
+  .nt .find-tools .arrow {
+    font-size: 20px;
+    min-width: 72px;
   }
 
   /* round timer */
