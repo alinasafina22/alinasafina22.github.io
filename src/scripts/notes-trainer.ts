@@ -1050,7 +1050,7 @@ function applyMode() {
   $('findTools').hidden = !(find && touchMode);
   if (!find) staff.classList.remove('placing');
   $('row-tempo').hidden = !(sc || tap); $('metroBtn').hidden = !sc; $('row-sub').hidden = !sc;
-  $('rkeys').hidden = !rh || tap; $('tapBox').hidden = !tap; $('memo').hidden = !rh;
+  $('rkeys').hidden = !rh || tap; $('tapBox').hidden = !tap; $('memo').hidden = !rh; $('scaleTheory').hidden = !sc;
   if (!sc) stopMetro();
   rClear();
   if (rh && !tap) buildRKeys();

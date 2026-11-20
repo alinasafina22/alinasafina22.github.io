@@ -160,6 +160,24 @@ const ru = {
   hintScaleF: 'В фа мажоре правая рука играет си♭ 4-м пальцем и подкладывает 1-й после него: 1-2-3-4, 1-2-3-4. Левая — как в до мажоре.',
   hintBoth: 'Двумя руками пальцы подменяются в разных местах: сначала сыграй каждой рукой отдельно, потом вместе и медленно.',
   hintHanon: 'Рука спокойная, пальцы закруглены. Каждый палец играет ровно и одинаково громко, двигаются только пальцы. Начинай медленно.',
+  // scales theory (shown in Scales & Hanon mode). steps: T = tone, S = semitone, A = tone and a half
+  theory: {
+    h: 'Шпаргалка: как строятся гаммы',
+    intro: 'Гамма — это восемь звуков подряд от тоники до тоники. Соседние звуки отстоят друг от друга на <b>полутон (П)</b> — это соседние клавиши, считая чёрные, — или на <b>тон (Т)</b>, то есть два полутона, через одну клавишу. Между ми и фа, си и до чёрной клавиши нет, поэтому там полутон.',
+    step: { T: 'Т', S: 'П', A: '1½' } as Record<string, string>,
+    formula: 'Формула',
+    items: [
+      { title: 'Мажорная гамма', steps: 'TTSTTTS', text: 'Звучит светло. Полутоны стоят между III и IV, VII и VIII ступенями.', notes: ['до', 'ре', 'ми', 'фа', 'соль', 'ля', 'си', 'до'], tonic: 60, semis: [0, 2, 4, 5, 7, 9, 11, 12], more: 'Соль мажор: соль ля си до ре ми фа♯ соль — фа повышается, чтобы последние шаги вышли Т и П. Фа мажор: фа соль ля си♭ до ре ми фа.' },
+      { title: 'Натуральный минор', steps: 'TSTTSTT', text: 'Звучит грустнее. Полутоны стоят между II и III, V и VI ступенями.', notes: ['ля', 'си', 'до', 'ре', 'ми', 'фа', 'соль', 'ля'], tonic: 69, semis: [0, 2, 3, 5, 7, 8, 10, 12], more: '' },
+      { title: 'Гармонический минор', steps: 'TSTTSAS', text: 'Натуральный минор с повышенной VII ступенью. Между VI и VII ступенями получается полтора тона (увеличенная секунда) — от неё «восточное» звучание.', notes: ['ля', 'си', 'до', 'ре', 'ми', 'фа', 'соль♯', 'ля'], tonic: 69, semis: [0, 2, 3, 5, 7, 8, 11, 12], more: '' },
+      { title: 'Мелодический минор', steps: 'TSTTTTS', text: 'Вверх повышаются VI и VII ступени, вниз играется натуральный минор.', notes: ['ля', 'си', 'до', 'ре', 'ми', 'фа♯', 'соль♯', 'ля'], tonic: 69, semis: [0, 2, 3, 5, 7, 9, 11, 12], more: '' },
+    ],
+    tips: [
+      '<b>Как построить любую гамму:</b> от тоники отложи шаги по формуле. Каждая нота (до, ре, ми…) встречается ровно один раз, поэтому в фа мажоре пишется си♭, а не ля♯.',
+      '<b>Параллельные тональности:</b> у каждого мажора есть минор с теми же знаками, на малую терцию (3 полутона) ниже. До мажор — ля минор, соль мажор — ми минор, фа мажор — ре минор.',
+      '<b>Главные ступени:</b> I — тоника (T), IV — субдоминанта (S), V — доминанта (D). На них строятся главные трезвучия, а D7 — на V ступени.',
+    ],
+  },
   // metronome
   metroGo: 'Метроном идёт: вступай на любую долю',
   onBeat: 'в долю', early: (ms: number) => `рано на ${ms} мс`, late: (ms: number) => `поздно на ${ms} мс`, offBeat: 'мимо доли',
@@ -342,6 +360,23 @@ const en: typeof ru = {
   hintScaleF: 'In F major the right hand plays B♭ with finger 4 and tucks the thumb under after it: 1-2-3-4, 1-2-3-4. The left hand plays it like C major.',
   hintBoth: 'With both hands the thumbs tuck under in different places: play each hand alone first, then together and slowly.',
   hintHanon: 'Keep the hand still and the fingers curved. Every finger plays evenly and equally loud; only the fingers move. Start slowly.',
+  theory: {
+    h: 'Cheat sheet: how scales are built',
+    intro: 'A scale is eight notes in a row, from the tonic up to the next tonic. Neighbouring notes are a <b>half step (H)</b> apart — the very next key, black keys included — or a <b>whole step (W)</b>, two half steps, skipping one key. There’s no black key between E and F or between B and C, so those are half steps.',
+    step: { T: 'W', S: 'H', A: '1½' },
+    formula: 'Formula',
+    items: [
+      { title: 'Major scale', steps: 'TTSTTTS', text: 'Sounds bright. The half steps fall between degrees III–IV and VII–VIII.', notes: ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'C'], tonic: 60, semis: [0, 2, 4, 5, 7, 9, 11, 12], more: 'G major: G A B C D E F♯ G — F is raised so the last two steps come out W and H. F major: F G A B♭ C D E F.' },
+      { title: 'Natural minor', steps: 'TSTTSTT', text: 'Sounds sadder. The half steps fall between degrees II–III and V–VI.', notes: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'A'], tonic: 69, semis: [0, 2, 3, 5, 7, 8, 10, 12], more: '' },
+      { title: 'Harmonic minor', steps: 'TSTTSAS', text: 'Natural minor with a raised 7th degree. Between degrees VI and VII there’s a step and a half (an augmented second), which gives it its “eastern” colour.', notes: ['A', 'B', 'C', 'D', 'E', 'F', 'G♯', 'A'], tonic: 69, semis: [0, 2, 3, 5, 7, 8, 11, 12], more: '' },
+      { title: 'Melodic minor', steps: 'TSTTTTS', text: 'Going up, degrees VI and VII are raised; coming down you play the natural minor.', notes: ['A', 'B', 'C', 'D', 'E', 'F♯', 'G♯', 'A'], tonic: 69, semis: [0, 2, 3, 5, 7, 9, 11, 12], more: '' },
+    ],
+    tips: [
+      '<b>How to build any scale:</b> start on the tonic and add the steps from the formula. Each letter (C, D, E…) appears exactly once, which is why F major has B♭ rather than A♯.',
+      '<b>Relative keys:</b> every major key has a minor key with the same key signature, a minor third (3 half steps) lower. C major — A minor, G major — E minor, F major — D minor.',
+      '<b>Primary degrees:</b> I is the tonic (T), IV the subdominant (S), V the dominant (D). The primary triads are built on them, and V7 on degree V.',
+    ],
+  },
   metroGo: 'The metronome is running: come in on any beat',
   onBeat: 'on the beat', early: (ms) => `${ms} ms early`, late: (ms) => `${ms} ms late`, offBeat: 'off the beat',
   tempoLine: (ok, n, pct, bpm, sub) => `On the beat: <b>${ok} of ${n}</b> (${pct}%) · ${bpm} bpm${sub === 2 ? ', 2 notes per beat' : ''}`,

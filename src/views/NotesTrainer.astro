@@ -8,6 +8,21 @@ const locale = toLocale(Astro.currentLocale);
 const t = useTranslations(locale);
 const L = NT[locale];
 const u = L.ui;
+const th = L.theory;
+// A two-octave keyboard (C4–C6) with the scale's keys lit, for the scales cheat sheet.
+const WHITE_PC = [0, 2, 4, 5, 7, 9, 11];
+function scaleKeys(tonic: number, semis: number[]) {
+  const lit = new Set(semis.map((s) => tonic + s));
+  const whites: string[] = [], blacks: string[] = [];
+  let wx = 0;
+  for (let m = 60; m <= 84; m++) {
+    const isW = WHITE_PC.includes(m % 12), on = lit.has(m), root = m === tonic || m === tonic + 12;
+    const cls = `k ${isW ? 'w' : 'b'}${on ? ' on' : ''}${root ? ' root' : ''}`;
+    if (isW) { whites.push(`<rect class="${cls}" x="${wx * 14 + 0.5}" y="0.5" width="13" height="55" rx="2"/>`); wx++; }
+    else blacks.push(`<rect class="${cls}" x="${wx * 14 - 4.5}" y="0.5" width="9" height="34" rx="1.5"/>`);
+  }
+  return `<svg viewBox="0 0 ${wx * 14} 56" class="mini-keys" aria-hidden="true">${whites.join('')}${blacks.join('')}</svg>`;
+}
 ---
 
 <BaseLayout title={L.title} description={L.lead}>
@@ -176,6 +191,34 @@ const u = L.ui;
         <div class="memo-grid" id="memoGrid"></div>
         <p>{u.memoTree}</p>
       </section>
+
+      <details class="crib-box theory" id="scaleTheory" open hidden>
+        <summary>{th.h}</summary>
+        <div class="crib">
+          <p class="theory-intro" set:html={th.intro} />
+          {th.items.map((it) => (
+            <section class="theory-item">
+              <h2>{it.title}</h2>
+              <p class="formula">
+                <span class="lab">{th.formula}</span>
+                {[...it.steps].map((st) => <span class={`step step-${st}`}>{th.step[st]}</span>)}
+              </p>
+              <div class="scale-row">
+                {it.notes.map((n, i) => (
+                  <>
+                    <span class="sn">{n}</span>
+                    {i < it.steps.length && <span class={`step step-${it.steps[i]}`}>{th.step[it.steps[i]]}</span>}
+                  </>
+                ))}
+              </div>
+              <Fragment set:html={scaleKeys(it.tonic, it.semis)} />
+              <p>{it.text}</p>
+              {it.more && <p>{it.more}</p>}
+            </section>
+          ))}
+          <ul class="theory-tips">{th.tips.map((tip) => <li set:html={tip} />)}</ul>
+        </div>
+      </details>
 
       <details class="crib-box">
         <summary>{u.crib}</summary>
@@ -765,6 +808,95 @@ const u = L.ui;
     color: var(--color-muted);
     margin: 0;
   }
+  /* scales cheat sheet */
+  .nt .theory-intro {
+    margin: 0;
+  }
+  .nt .theory-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding-top: var(--space-3);
+    border-top: var(--border);
+  }
+  .nt .theory-item p {
+    margin: 0;
+  }
+  .nt .formula {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+  }
+  .nt .formula .lab {
+    font: var(--text-meta) var(--font-mono);
+    color: var(--color-muted);
+    margin-right: var(--space-1);
+  }
+  .nt .step {
+    display: inline-block;
+    min-width: 24px;
+    text-align: center;
+    font: 600 12px/1 var(--font-mono);
+    padding: 4px 5px;
+    border-radius: var(--radius-pill);
+    background: var(--color-sage);
+    color: var(--color-ink);
+  }
+  .nt .step-S {
+    background: var(--color-peach);
+  }
+  .nt .step-A {
+    background: var(--color-butter);
+  }
+  .nt .scale-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 3px;
+  }
+  .nt .scale-row .sn {
+    font: 600 15px var(--font-display);
+    padding: 0 2px;
+  }
+  .nt .scale-row .step {
+    font-size: 10px;
+    min-width: 18px;
+    padding: 2px 4px;
+  }
+  .nt .mini-keys {
+    width: 100%;
+    max-width: 320px;
+    height: auto;
+  }
+  .nt .mini-keys .k {
+    stroke: var(--color-muted);
+    stroke-width: 0.8;
+  }
+  .nt .mini-keys .k.w {
+    fill: var(--nt-key-white);
+  }
+  .nt .mini-keys .k.b {
+    fill: var(--nt-key-black);
+  }
+  .nt .mini-keys .k.w.on {
+    fill: var(--color-sage);
+  }
+  .nt .mini-keys .k.b.on {
+    fill: var(--color-sage-deep);
+  }
+  .nt .mini-keys .k.w.root {
+    fill: var(--color-dusty-rose);
+  }
+  .nt .theory-tips {
+    margin: 0;
+    padding-left: 1.2em;
+    display: grid;
+    gap: var(--space-2);
+    border-top: var(--border);
+    padding-top: var(--space-3);
+  }
+
   /* find on the staff */
   .nt svg.staff.placing {
     cursor: crosshair;
