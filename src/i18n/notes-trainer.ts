@@ -154,6 +154,8 @@ const ru = {
   seqBad: (parts: [string, string, number][]) =>
     parts.length === 1 ? `Не та клавиша: нужна <span class="big">${parts[0][1]}</span> пальцем ${parts[0][2]}` : `Не та клавиша: правая — <span class="big">${parts[0][1]}</span> пальцем ${parts[0][2]}, левая — <span class="big">${parts[1][1]}</span> пальцем ${parts[1][2]}`,
   seqAskBoth: 'Нажми обе отмеченные клавиши: правой и левой рукой',
+  youPressed: (n: string) => `Ты нажала: ${n}`,
+  midiShifted: 'Похоже, пианино передаёт ноты в другой октаве — засчитываю по названию ноты.',
   seqDonePerfect: 'Чисто, без единой ошибки. Попробуй другой рукой или следующую гамму.',
   seqDone: 'Сыграй ещё раз помедленнее и следи за пальцами. Цифра показывает, сколько нот ты взяла с первого раза.',
   hintScale: 'Правая рука вверх: после 3-го пальца подложи 1-й под ладонь, вниз — перенеси 3-й через 1-й. Левая наоборот: вверх 3-й переходит через 1-й.',
@@ -354,6 +356,8 @@ const en: typeof ru = {
   seqBad: (parts) =>
     parts.length === 1 ? `Wrong key: play <span class="big">${parts[0][1]}</span> with finger ${parts[0][2]}` : `Wrong key: right hand <span class="big">${parts[0][1]}</span> with finger ${parts[0][2]}, left hand <span class="big">${parts[1][1]}</span> with finger ${parts[1][2]}`,
   seqAskBoth: 'Press both marked keys, one with each hand',
+  youPressed: (n) => `You pressed: ${n}`,
+  midiShifted: 'Looks like your piano sends notes in a different octave — counting them by note name.',
   seqDonePerfect: 'Clean, not a single mistake. Try the other hand or the next scale.',
   seqDone: 'Play it again, slower, and watch the fingers. The number shows how many notes you hit on the first try.',
   hintScale: 'Right hand going up: after finger 3, tuck the thumb under; coming down, cross 3 over the thumb. The left hand is the other way round: going up, 3 crosses over the thumb.',
