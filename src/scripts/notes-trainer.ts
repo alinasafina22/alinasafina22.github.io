@@ -106,9 +106,11 @@ function pool() {
   return r;
 }
 const key = (n) => n.clef[0] + n.pos;
+// "Find on the staff" keeps its own error stats: reading a note and placing it are different skills.
+const statKey = (n) => (cfg.mode === 'find' ? 'f' : '') + key(n);
 function pick(prev) {
   const items = pool().filter((n) => !prev || key(n) !== key(prev));
-  const w = items.map((n) => { const s = stats[key(n)]; return s ? 1 + 4 * (s.e / s.n) : 1.6; });
+  const w = items.map((n) => { const s = stats[statKey(n)]; return s ? 1 + 4 * (s.e / s.n) : 1.6; });
   let r = Math.random() * w.reduce((a, b) => a + b, 0);
   for (let i = 0; i < items.length; i++) { r -= w[i]; if (r <= 0) return items[i]; }
   return items[items.length - 1];
@@ -119,7 +121,7 @@ const fullName = (n) => { const d = dOf(n); return L.full(NAMES[d % 7], Math.flo
 // ---------- round timer ----------
 // A whole round against the clock, for the quiz modes: read notes, by ear, how many beats.
 const clock = { iv: null, start: 0, end: 0, running: false };
-const timedMode = () => cfg.time !== '0' && (cfg.mode === 'read' || cfg.mode === 'ear' || (cfg.mode === 'rhythm' && cfg.rtask === 'value'));
+const timedMode = () => cfg.time !== '0' && (cfg.mode === 'read' || cfg.mode === 'find' || cfg.mode === 'ear' || (cfg.mode === 'rhythm' && cfg.rtask === 'value'));
 const mmss = (ms) => { const s = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
 function startClock() {
   stopClock();
@@ -152,6 +154,7 @@ function next() {
   if (cfg.mode === 'rhythm') return cfg.rtask === 'tap' ? nextTapBar() : nextRhythmValue();
   locked = false;
   cur = pick(cur);
+  if (cfg.mode === 'find') return showFind();
   document.querySelectorAll('#keys button').forEach((b) => { b.className = ''; b.disabled = false; });
   const fb = $('fb'); fb.className = 'feedback idle';
   fb.textContent = cfg.mode === 'ear' ? L.askEar : L.ask;
@@ -249,7 +252,7 @@ function bkey() {
   if (cfg.mode === 'scales') return 'sc-' + cfg.piece + '-' + cfg.hand;
   if (cfg.mode === 'rhythm') return 'rh-' + cfg.rtask + '-' + cfg.rlevel;
   if (cfg.mode === 'chords') return 'chords-' + cfg.hand + '-' + cfg.ctask + '-' + [...cfg.ctypes].sort().join('');
-  return cfg.mode + '-' + cfg.clef + '-' + cfg.range + t;
+  return cfg.mode + '-' + cfg.clef + '-' + cfg.range + t; // read-… and find-…
 }
 function showHint() {
   const h = $('hint');
@@ -263,6 +266,7 @@ function showHint() {
     return;
   }
   if (cfg.mode === 'ear') h.innerHTML = L.hintEar;
+  else if (cfg.mode === 'find') h.innerHTML = (cur.clef === 'treble' ? L.hintTreble : L.hintBass) + '<br>' + (cur.clef === 'treble' ? L.hintFindTreble : L.hintFindBass);
   else h.innerHTML = cur.clef === 'treble' ? L.hintTreble : L.hintBass;
 }
 
@@ -920,6 +924,74 @@ $('rNext').onclick = rNext;
 $('tapBtn').addEventListener('pointerdown', (e) => { e.preventDefault(); rTap(); });
 buildMemo();
 
+// ---------- find on the staff ----------
+// The trainer names a note, you place it: hover (or tap) shows a preview, a click (or a second tap) answers.
+const range = () => (cfg.range === 'ledger' ? [-4, 12] : [-1, 9]);
+let findPos = null, touchMode = false;
+function nameParts(n) {
+  const d = dOf(n), o = Math.floor(d / 7), full = L.full(NAMES[d % 7], o);
+  // Russian: big "си", small "малой октавы"; English: the whole "B2" is the name.
+  const name = L.oct.length ? NAMES[d % 7] : full;
+  return { full, name, rest: full.slice(name.length).trim() };
+}
+function drawFind(preview) {
+  drawStaff(cur.clef, 0, '', true);
+  staff.querySelector('.ask')?.remove();
+  if (preview != null) staff.insertAdjacentHTML('beforeend', noteAt(NX, preview, 'note preview').replace(/class="ledger"/g, 'class="ledger preview"'));
+}
+function showFind() {
+  findPos = null;
+  const p = nameParts(cur), clefName = cfg.clef === 'both' ? ' · ' + (cur.clef === 'bass' ? L.ui.bass : L.ui.treble) : '';
+  $('task').innerHTML = L.findTask(p.name, (p.rest || '') + clefName);
+  staff.classList.add('placing');
+  drawFind(null);
+  const fb = $('fb'); fb.className = 'feedback idle'; fb.textContent = touchMode ? L.findAskTouch : L.findAsk;
+  $('findTools').hidden = !touchMode; $('findCheck').disabled = true;
+  updateHUD();
+  if (!$('hint').hidden) showHint();
+}
+function posFromEvent(e) {
+  const pt = staff.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+  const y = pt.matrixTransform(staff.getScreenCTM().inverse()).y;
+  const [lo, hi] = range();
+  return clamp(Math.round((BOT - y) / (S / 2)), lo, hi);
+}
+function setPreview(pos) { if (locked || cfg.mode !== 'find') return; findPos = pos; drawFind(pos); $('findCheck').disabled = false; }
+function findAnswer(pos) {
+  if (cfg.mode !== 'find' || locked || $('game').hidden || pos == null) return;
+  locked = true; armClock();
+  const ok = pos === cur.pos, k = statKey(cur), s = stats[k] || { n: 0, e: 0 };
+  s.n++; if (!ok) s.e++;
+  if (s.n > 12) { s.n = Math.round(s.n * 0.75); s.e = Math.round(s.e * 0.75); }
+  stats[k] = s; store.set('nt-stats', stats);
+  staff.classList.remove('placing');
+  const fb = $('fb'), p = nameParts(cur);
+  if (ok) {
+    round.right++; drawStaff(cur.clef, cur.pos, 'ok');
+    fb.className = 'feedback ok'; fb.innerHTML = `<span>${L.findOk(p.full)}</span>`;
+  } else {
+    round.misses.push(cur);
+    // your note in red where you put it, the right one in green next to it
+    drawStaff(cur.clef, pos, 'bad');
+    staff.insertAdjacentHTML('beforeend', noteAt(NX + 46, cur.pos, 'note ok'));
+    fb.className = 'feedback bad'; fb.innerHTML = `<span>${L.findBad(nameParts({ clef: cur.clef, pos }).full)}</span>`;
+  }
+  $('findTools').hidden = true;
+  tone(midiOf(dOf(cur)));
+  round.i++; updateHUD();
+  timer = setTimeout(() => (round.i >= ROUND ? finish() : next()), pause(ok, !ok));
+}
+staff.addEventListener('pointermove', (e) => { if (cfg.mode === 'find' && e.pointerType === 'mouse') setPreview(posFromEvent(e)); });
+staff.addEventListener('pointerleave', (e) => { if (cfg.mode === 'find' && e.pointerType === 'mouse' && !locked) { findPos = null; drawFind(null); } });
+staff.addEventListener('pointerdown', (e) => {
+  if (cfg.mode !== 'find' || locked || $('game').hidden) return;
+  const pos = posFromEvent(e);
+  if (e.pointerType === 'mouse') return findAnswer(pos);
+  if (!touchMode) { touchMode = true; $('findTools').hidden = false; $('fb').textContent = L.findAskTouch; }
+  if (pos === findPos) findAnswer(pos); else setPreview(pos);
+});
+$('findCheck').onclick = () => findAnswer(findPos);
+
 // ---------- controls ----------
 NAMES.forEach((n, i) => {
   const b = document.createElement('button'); b.type = 'button'; b.id = 'k-' + i; b.textContent = n;
@@ -935,10 +1007,13 @@ function bindSeg(id, prop) {
   sync();
 }
 function applyMode() {
+  const find = cfg.mode === 'find';
   const ear = cfg.mode === 'ear', ch = cfg.mode === 'chords', sc = cfg.mode === 'scales', rh = cfg.mode === 'rhythm', tap = rh && cfg.rtask === 'tap';
   $('row-clef').hidden = ear || ch || sc || rh; $('row-range').hidden = ear || ch || sc || rh;
   $('row-rtask').hidden = !rh; $('row-rlevel').hidden = !rh;
-  $('row-time').hidden = !(cfg.mode === 'read' || ear || (rh && !tap));
+  $('row-time').hidden = !(cfg.mode === 'read' || find || ear || (rh && !tap));
+  $('findTools').hidden = !(find && touchMode);
+  if (!find) staff.classList.remove('placing');
   $('row-tempo').hidden = !(sc || tap); $('metroBtn').hidden = !sc; $('row-sub').hidden = !sc;
   $('rkeys').hidden = !rh || tap; $('tapBox').hidden = !tap; $('memo').hidden = !rh;
   if (!sc) stopMetro();
@@ -951,8 +1026,8 @@ function applyMode() {
     cfg.hand = 'R'; store.set('nt-cfg', cfg);
     $('seg-hand').querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === 'R')));
   }
-  $('keys').hidden = ch || sc || rh; $('piano').hidden = !(ch || sc);
-  $('task').hidden = !(ch || sc); $('finger').hidden = !(ch || sc);
+  $('keys').hidden = ch || sc || rh || find; $('piano').hidden = !(ch || sc);
+  $('task').hidden = !(ch || sc || find); $('finger').hidden = !(ch || sc);
   ROUND = ch ? 10 : tap ? 8 : 20;
 }
 bindSeg('seg-mode', 'mode'); bindSeg('seg-clef', 'clef'); bindSeg('seg-range', 'range'); bindSeg('seg-oct', 'oct');
@@ -1025,6 +1100,16 @@ document.addEventListener('keydown', (e) => {
     }
     return;
   }
+  if (cfg.mode === 'find') {
+    const [lo, hi] = range();
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      // a settings button may still hold focus after a click; let Enter answer instead of pressing it
+      if (e.target.closest('.seg')) e.target.blur();
+      setPreview(clamp((findPos ?? 4) + (e.key === 'ArrowUp' ? 1 : -1), lo, hi));
+    } else if (e.key === 'Enter' && !e.target.closest('button, summary, a')) findAnswer(findPos);
+    return;
+  }
   if (cfg.mode === 'chords') {
     if (e.key === 'Enter' && !e.target.closest('button, summary, a')) { if (!$('nextBtn').hidden) goNext(); else checkChord([...sel], false); }
     return;
@@ -1037,7 +1122,7 @@ round = { i: 0, right: 0, misses: [] };
 cur = pick(null); locked = false;
 if (cfg.mode === 'chords') nextChord();
 else if (cfg.mode === 'scales') startSeq();
-else if (cfg.mode === 'rhythm') next();
+else if (cfg.mode === 'rhythm' || cfg.mode === 'find') next();
 else {
   drawStaff(cur.clef, cur.pos, '', cfg.mode === 'ear');
   $('fb').textContent = cfg.mode === 'ear' ? L.askEarStart : L.ask;

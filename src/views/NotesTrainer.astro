@@ -26,6 +26,7 @@ const u = L.ui;
           <span class="lab">{u.mode}</span>
           <div class="seg" id="seg-mode">
             <button type="button" data-v="read">{u.read}</button>
+            <button type="button" data-v="find">{u.find}</button>
             <button type="button" data-v="ear">{u.ear}</button>
             <button type="button" data-v="chords">{u.chords}</button>
             <button type="button" data-v="scales">{u.scales}</button>
@@ -135,6 +136,9 @@ const u = L.ui;
           <div class="finger" id="finger" hidden></div>
           <svg class="staff" id="staff" viewBox="0 0 300 150" role="img" aria-label={u.staffAria}></svg>
           <div class="feedback idle" id="fb">{L.ask}</div>
+          <div class="tools find-tools" id="findTools" hidden>
+            <button class="tool primary" id="findCheck" type="button">{u.check}</button>
+          </div>
         </div>
         <div class="summary" id="sum" hidden></div>
       </section>
@@ -760,6 +764,23 @@ const u = L.ui;
     color: var(--color-muted);
     margin: 0;
   }
+  /* find on the staff */
+  .nt svg.staff.placing {
+    cursor: crosshair;
+    touch-action: manipulation;
+  }
+  .nt svg.staff .note.preview {
+    fill: var(--color-focus);
+    opacity: 0.55;
+  }
+  .nt svg.staff .ledger.preview {
+    stroke: var(--color-focus);
+    opacity: 0.55;
+  }
+  .nt .find-tools {
+    justify-content: center;
+  }
+
   /* round timer */
   .nt .clock {
     font-weight: 500;
