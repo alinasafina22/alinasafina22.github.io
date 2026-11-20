@@ -962,7 +962,8 @@ buildMemo();
 // ---------- find on the staff ----------
 // The trainer names a note, you place it: hover (or tap) shows a preview, a click (or a second tap) answers.
 const range = () => (cfg.range === 'ledger' ? [-4, 12] : [-1, 9]);
-let findPos = null, touchMode = false;
+// On phones and tablets the note starts on the first (bottom) line and the ▲ ▼ buttons move it one step at a time.
+let findPos = null, touchMode = window.matchMedia('(pointer: coarse)').matches;
 function nameParts(n) {
   const d = dOf(n), o = Math.floor(d / 7), full = L.full(NAMES[d % 7], o);
   // Russian: big "си", small "малой октавы"; English: the whole "B2" is the name.
@@ -979,9 +980,9 @@ function showFind() {
   const p = nameParts(cur), clefName = cfg.clef === 'both' ? ' · ' + (cur.clef === 'bass' ? L.ui.bass : L.ui.treble) : '';
   $('task').innerHTML = L.findTask(p.name, (p.rest || '') + clefName);
   staff.classList.add('placing');
-  drawFind(null);
+  if (touchMode) { findPos = 0; drawFind(0); } else drawFind(null);
   const fb = $('fb'); fb.className = 'feedback idle'; fb.textContent = touchMode ? L.findAskTouch : L.findAsk;
-  $('findTools').hidden = !touchMode; $('findCheck').disabled = true;
+  $('findTools').hidden = !touchMode; $('findCheck').disabled = findPos == null;
   updateHUD();
   if (!$('hint').hidden) showHint();
 }
@@ -1023,9 +1024,13 @@ staff.addEventListener('pointerdown', (e) => {
   const pos = posFromEvent(e);
   if (e.pointerType === 'mouse') return findAnswer(pos);
   if (!touchMode) { touchMode = true; $('findTools').hidden = false; $('fb').textContent = L.findAskTouch; }
-  if (pos === findPos) findAnswer(pos); else setPreview(pos);
+  // a tap only moves the note; the answer is always the Check button, so a slip of the finger isn't counted
+  setPreview(pos);
 });
 $('findCheck').onclick = () => findAnswer(findPos);
+function nudge(step) { const [lo, hi] = range(); setPreview(clamp((findPos ?? 0) + step, lo, hi)); }
+$('findUp').onclick = () => nudge(1);
+$('findDown').onclick = () => nudge(-1);
 
 // ---------- controls ----------
 NAMES.forEach((n, i) => {
