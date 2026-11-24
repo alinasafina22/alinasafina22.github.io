@@ -595,10 +595,22 @@ function drawSeqPiano() {
   svg.setAttribute('viewBox', `0 0 ${wx * W} 100`);
   svg.innerHTML = whites + blacks;
 }
-function seqPress(m) {
+// Many MIDI keyboards (small ones especially) send notes an octave or two off from what's printed on the keys.
+// The first MIDI press that has the right note name in another octave sets this shift for the rest of the visit.
+let midiShift = null, shiftShown = false;
+const pressedName = (m) => L.full(L.pcn[((m % 12) + 12) % 12], Math.floor(m / 12) - 1);
+function seqPress(raw, fromMidi = false) {
   if (seqDone || $('game').hidden || !seq.length) return;
-  tone(m, 0, 0.6);
+  if (!fromMidi) tone(raw, 0, 0.6); // a real piano already makes its own sound
   const cur = seq[round.i], fb = $('fb');
+  let m = raw;
+  if (fromMidi) {
+    if (midiShift == null) {
+      const same = cur.find((n) => !seqHit.has(midiN(n)) && (raw - midiN(n)) % 12 === 0);
+      if (same && raw !== midiN(same)) midiShift = raw - midiN(same);
+    }
+    if (midiShift != null) m = raw - midiShift;
+  }
   if (seqHit.has(m)) return;
   if (cur.some((n) => midiN(n) === m)) {
     if (!seqHit.size) seqTimes[round.i] = seqTiming(round.i, nowT());
@@ -607,12 +619,14 @@ function seqPress(m) {
     if (!seqErr[round.i]) round.right++;
     seqLast = new Set(seqHit); seqHit = new Set(); round.i++;
     const tm = seqTimes[round.i - 1];
-    fb.className = 'feedback ok'; fb.innerHTML = `<span>${L.seqOk(cur.map((n) => [n.hand, nm(n), n.f]))}${tm ? `<span class="timing">${timingText(tm)}</span>` : ''}</span>`;
+    const shiftNote = fromMidi && midiShift && !shiftShown ? `<small>${L.midiShifted}</small>` : '';
+    if (shiftNote) shiftShown = true;
+    fb.className = 'feedback ok'; fb.innerHTML = `<span>${L.seqOk(cur.map((n) => [n.hand, nm(n), n.f]))}${tm ? `<span class="timing">${timingText(tm)}</span>` : ''}${shiftNote}</span>`;
     if (round.i >= seq.length) { seqDone = true; renderSeq(); updateHUD(); timer = setTimeout(finish, 900); return; }
   } else {
     if (!seqErr[round.i]) round.misses.push({ label: stepNames(cur) });
     seqErr[round.i] = true; seqFlash = m;
-    fb.className = 'feedback bad'; fb.innerHTML = `<span>${L.seqBad(cur.map((n) => [n.hand, nm(n), n.f]))}</span>`;
+    fb.className = 'feedback bad'; fb.innerHTML = `<span>${L.seqBad(cur.map((n) => [n.hand, nm(n), n.f]))}<small>${L.youPressed(pressedName(raw))}</small></span>`;
     clearTimeout(seqTimer); seqTimer = setTimeout(() => { seqFlash = null; drawSeqPiano(); }, 500);
   }
   renderSeq(); updateHUD();
@@ -1118,7 +1132,7 @@ function wireInputs() {
 function onMidi(e) {
   const [s, n, v] = e.data, cmd = s & 0xf0;
   const on = cmd === 0x90 && v > 0, off = cmd === 0x80 || (cmd === 0x90 && v === 0);
-  if (cfg.mode === 'scales') { if (on) seqPress(n); return; }
+  if (cfg.mode === 'scales') { if (on) seqPress(n, true); return; }
   if (cfg.mode === 'rhythm') { if (on && cfg.rtask === 'tap') rTap(); return; }
   if (cfg.mode === 'chords') { if (on || off) chordMidi(on, n); return; }
   if (on) submit({ midi: n });
