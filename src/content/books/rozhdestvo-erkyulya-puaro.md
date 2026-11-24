@@ -3,7 +3,8 @@ title: "Рождество Эркюля Пуаро"
 author: "Агата Кристи"
 tags: ["детектив", "классика"]
 cover: "./covers/rozhdestvo-erkyulya-puaro.jpg"
-status: want-to-read
+status: reading
+startDate: 2026-11-24
 plan: 2026
 updated: 2026-11-23
 lang: ru
