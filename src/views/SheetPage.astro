@@ -1,0 +1,189 @@
+---
+import { render } from 'astro:content';
+import { Image } from 'astro:assets';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import TagList from '../components/TagList.astro';
+import Doodle from '../components/Doodle.astro';
+import type { Localized } from '../i18n/content';
+import { formatDateFor, localePath, toLocale, useTranslations } from '../i18n/ui';
+
+interface Props {
+  sheet: Localized<'sheets'>;
+}
+
+const { sheet } = Astro.props;
+const locale = toLocale(Astro.currentLocale);
+const t = useTranslations(locale);
+const d = sheet.data;
+const { Content } = await render(sheet.source);
+const hasBody = Boolean(sheet.body?.trim());
+---
+
+<BaseLayout title={d.title} description={d.description ?? d.title} lang={sheet.lang}>
+  <div class="container">
+    <Breadcrumbs items={[{ href: localePath(locale, '/sheet-music/'), label: t('sheets.title') }]} />
+
+    <article class="sheet">
+      <header class="head">
+        <h1>
+          {d.title}
+          <Doodle name="note" size={34} fill="var(--color-sage)" class="mark" />
+        </h1>
+        {d.author && <p class="author">{d.author}</p>}
+        {d.description && <p class="lead">{d.description}</p>}
+        <p class="meta"><time datetime={d.date.toISOString()}>{formatDateFor(locale, d.date)}</time></p>
+        <TagList tags={d.tags} />
+      </header>
+
+      <section class="score-box" data-sheet>
+        <div class="controls">
+          <button class="btn primary" type="button" data-play data-play-label={t('sheets.play')} data-stop-label={t('sheets.stop')}>
+            {t('sheets.play')}
+          </button>
+          <span class="transpose">
+            <span class="meta">{t('sheets.transpose')}</span>
+            <button class="btn" type="button" data-tr="-1" aria-label={t('sheets.down')}>−</button>
+            <output data-tr-out>0</output>
+            <button class="btn" type="button" data-tr="1" aria-label={t('sheets.up')}>+</button>
+          </span>
+        </div>
+        <div class="score" data-score></div>
+        <details class="source">
+          <summary class="meta">{t('sheets.source')}</summary>
+          <pre data-abc>{d.abc}</pre>
+        </details>
+      </section>
+
+      {
+        d.image && (
+          <figure class="original">
+            <Image src={d.image} alt={d.imageAlt ?? ''} widths={[640, 1120]} sizes="(min-width: 760px) 720px, 100vw" />
+            <figcaption class="meta">{t('sheets.original')}</figcaption>
+          </figure>
+        )
+      }
+
+      {
+        hasBody && (
+          <section class="about" aria-labelledby="about">
+            <h2 id="about">{t('sheets.about')}</h2>
+            <div class="prose" lang={sheet.bodyLang !== locale ? sheet.bodyLang : undefined}>
+              <Content />
+            </div>
+          </section>
+        )
+      }
+    </article>
+  </div>
+</BaseLayout>
+
+<script is:inline src="/vendor/abcjs-basic-min.js"></script>
+<script>
+  import '../scripts/sheet';
+</script>
+
+<style>
+  .sheet {
+    margin-bottom: var(--space-16);
+  }
+  .head {
+    max-width: var(--width-reading);
+  }
+  h1 {
+    margin-bottom: var(--space-2);
+  }
+  h1 :global(.mark) {
+    vertical-align: -0.1em;
+    margin-left: var(--space-1);
+  }
+  .author {
+    margin: 0;
+    color: var(--color-muted);
+  }
+  .lead {
+    margin: var(--space-3) 0 0;
+  }
+  .head .meta {
+    margin: var(--space-3) 0 var(--space-2);
+  }
+  .score-box {
+    margin-top: var(--space-8);
+    background: var(--color-card);
+    border: var(--border);
+    border-radius: var(--radius-large);
+    padding: var(--space-4) var(--space-6);
+  }
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-6);
+    align-items: center;
+  }
+  .transpose {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .transpose output {
+    font: 500 var(--text-small) var(--font-mono);
+    min-width: 3ch;
+    text-align: center;
+  }
+  .btn {
+    font-size: var(--text-small);
+    font-weight: 500;
+    color: var(--color-ink);
+    background: none;
+    border: var(--border);
+    border-radius: var(--radius-button);
+    padding: 6px 12px;
+    cursor: pointer;
+  }
+  .btn:hover {
+    border-color: var(--color-muted);
+  }
+  .btn.primary {
+    background: var(--color-ink);
+    border-color: var(--color-ink);
+    color: var(--color-paper);
+    min-width: 8.5em;
+  }
+  .score {
+    margin-top: var(--space-4);
+    color: var(--color-ink);
+    overflow-x: auto;
+  }
+  .score :global(.abcjs-note.playing),
+  .score :global(.abcjs-note.playing path) {
+    fill: var(--color-focus);
+  }
+  .source {
+    margin-top: var(--space-3);
+  }
+  .source summary {
+    cursor: pointer;
+  }
+  .source pre {
+    margin: var(--space-2) 0 0;
+    font-size: var(--text-meta);
+    white-space: pre-wrap;
+  }
+  .original {
+    margin: var(--space-8) 0 0;
+    max-width: 720px;
+  }
+  .original :global(img) {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-large);
+    border: var(--border);
+  }
+  .original figcaption {
+    margin-top: var(--space-2);
+  }
+  .about {
+    margin-top: var(--space-8);
+    max-width: var(--width-reading);
+  }
+</style>

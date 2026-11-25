@@ -1,0 +1,10 @@
+---
+import View from '../../views/SheetPage.astro';
+import { sheetPaths } from '../../i18n/paths';
+
+export function getStaticPaths() {
+  return sheetPaths('en');
+}
+---
+
+<View {...Astro.props} />

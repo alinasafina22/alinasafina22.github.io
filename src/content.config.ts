@@ -185,6 +185,29 @@ const recipes = defineCollection({
 });
 
 /**
+ * Sheet music: a melody written in ABC notation (rendered and played on the page with abcjs),
+ * optionally with a photo of the handwritten original. The Markdown body is notes about the piece.
+ * Only own melodies and works in the public domain.
+ */
+const sheets = defineCollection({
+  loader: md('sheets'),
+  schema: ({ image }) =>
+    z.object({
+      title: z.string(),
+      /** Composer, when it isn't me. */
+      author: z.string().optional(),
+      description: z.string().optional(),
+      date: z.coerce.date(),
+      abc: z.string(),
+      image: image().optional(),
+      imageAlt: z.string().optional(),
+      tags,
+      lang,
+      draft: z.boolean().default(false),
+    }),
+});
+
+/**
  * Translations: src/content/translations/<locale>/<collection>/<id>.md
  * Holds only the translated fields (title, author, description…) and the translated body.
  * Everything else (status, rating, dates, tags) stays in the original file.
@@ -227,4 +250,4 @@ const pages = defineCollection({
   }),
 });
 
-export const collections = { notes, books, courses, movies, tvShows, things, recipes, pages, translations };
+export const collections = { notes, books, courses, movies, tvShows, things, recipes, sheets, pages, translations };

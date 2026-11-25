@@ -1,0 +1,101 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import EmptyState from '../components/EmptyState.astro';
+import Doodle from '../components/Doodle.astro';
+import TagList from '../components/TagList.astro';
+import { localizeAll } from '../i18n/content';
+import { formatDateFor, localePath, toLocale, useTranslations } from '../i18n/ui';
+
+const locale = toLocale(Astro.currentLocale);
+const t = useTranslations(locale);
+const sheets = (await localizeAll(await getCollection('sheets', (s) => import.meta.env.DEV || !s.data.draft), locale)).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf(),
+);
+---
+
+<BaseLayout title={t('sheets.title')} description={t('sheets.meta')}>
+  <div class="container">
+    <PageHeader title={t('sheets.title')} description={t('sheets.lead')} doodle="note" accent="var(--color-sage)" />
+    {
+      sheets.length ? (
+        <ul class="list">
+          {sheets.map((s) => (
+            <li class="card">
+              <Doodle name="note" size={40} fill="var(--color-sage)" class="icon" />
+              <div class="body">
+                <h2>
+                  <a href={localePath(locale, `/sheet-music/${s.id}/`)} lang={s.lang !== locale ? s.lang : undefined}>
+                    {s.data.title}
+                  </a>
+                </h2>
+                {s.data.author && <p class="author">{s.data.author}</p>}
+                {s.data.description && <p class="desc">{s.data.description}</p>}
+                <p class="meta">
+                  <time datetime={s.data.date.toISOString()}>{formatDateFor(locale, s.data.date)}</time>
+                </p>
+                <TagList tags={s.data.tags} />
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <EmptyState text={t('sheets.empty')} hint={t('sheets.emptyHint')} />
+      )
+    }
+  </div>
+</BaseLayout>
+
+<style>
+  .list {
+    display: grid;
+    gap: var(--space-4);
+    margin: 0 0 var(--space-16);
+    padding: 0;
+    list-style: none;
+    max-width: var(--width-reading);
+  }
+  .card {
+    display: flex;
+    gap: var(--space-4);
+    align-items: flex-start;
+    padding: var(--space-4) var(--space-6);
+    background: var(--color-card);
+    border: var(--border);
+    border-radius: var(--radius-large);
+    position: relative;
+  }
+  .card :global(.icon) {
+    flex: none;
+  }
+  .body {
+    min-width: 0;
+  }
+  h2 {
+    margin: 0;
+    font-size: 1.25rem;
+  }
+  h2 a {
+    color: inherit;
+    text-decoration: none;
+  }
+  h2 a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .card:hover h2 a {
+    text-decoration: underline;
+  }
+  .author,
+  .desc {
+    margin: var(--space-1) 0 0;
+  }
+  .author {
+    color: var(--color-muted);
+  }
+  .meta {
+    margin: var(--space-2) 0 0;
+  }
+</style>

@@ -2,6 +2,7 @@
 // All visible text comes from src/i18n/notes-trainer.ts, picked by the page language.
 // @ts-nocheck — a straight port of the standalone trainer; kept untyped on purpose.
 import { NT } from '../i18n/notes-trainer';
+import { ctx as pianoCtx, tone, loadPiano } from './piano';
 
 const L = NT[document.documentElement.lang === 'ru' ? 'ru' : 'en'];
 const NAMES = L.names;
@@ -82,54 +83,9 @@ function ell(cx, cy, rx, ry, deg) {
 }
 
 // ---------- sound ----------
+// The piano lives in ./piano.ts (shared with the sheet-music pages); `ac` mirrors its AudioContext here.
 let ac;
-function ctx() { if (!ac) { const C = window.AudioContext || window.webkitAudioContext; if (C) ac = new C(); } if (ac && ac.state === 'suspended') ac.resume(); return ac; }
-// Grand piano: Salamander Grand Piano samples (Alexander Holm, CC BY 3.0) in public/sounds/piano/,
-// one recording every three semitones; notes in between are the nearest sample slightly re-pitched.
-// They load after the first tap on the page; until a sample is ready the simple synth below plays.
-const PIANO_FILES = ['A1', 'C2', 'Ds2', 'Fs2', 'A2', 'C3', 'Ds3', 'Fs3', 'A3', 'C4', 'Ds4', 'Fs4', 'A4', 'C5', 'Ds5', 'Fs5', 'A5', 'C6', 'Ds6', 'Fs6', 'A6', 'C7'];
-const pianoBuf = new Map();
-let pianoLoading = false, master = null;
-const fileMidi = (n) => { const m = n.match(/^([A-G])(s?)(\d)$/); return 12 * (+m[3] + 1) + { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }[m[1]] + (m[2] ? 1 : 0); };
-function loadPiano() {
-  const a = ctx(); if (!a || pianoLoading) return;
-  pianoLoading = true;
-  PIANO_FILES.forEach(async (n) => {
-    try {
-      const res = await fetch(`/sounds/piano/${n}.mp3`);
-      const buf = await new Promise((ok, fail) => res.arrayBuffer().then((ab) => a.decodeAudioData(ab, ok, fail)));
-      pianoBuf.set(fileMidi(n), buf);
-    } catch {}
-  });
-}
-function out() {
-  // a gentle compressor so chords and both-hand scales don't clip
-  if (!master) { master = ac.createDynamicsCompressor(); master.threshold.value = -14; master.ratio.value = 4; master.connect(ac.destination); }
-  return master;
-}
-function tone(midi, when = 0, dur = 1.1) {
-  const a = ctx(); if (!a) return;
-  loadPiano();
-  let near = null, nd = 99;
-  pianoBuf.forEach((buf, m) => { const d = Math.abs(m - midi); if (d < nd) { nd = d; near = [m, buf]; } });
-  if (!near || nd > 2) return synthTone(midi, when, dur);
-  const t = a.currentTime + when + 0.005, end = t + Math.max(dur, 0.3);
-  const src = a.createBufferSource(), g = a.createGain();
-  src.buffer = near[1]; src.playbackRate.value = Math.pow(2, (midi - near[0]) / 12);
-  g.gain.setValueAtTime(0.75, t); g.gain.setValueAtTime(0.75, end); g.gain.exponentialRampToValueAtTime(0.0001, end + 0.45);
-  src.connect(g).connect(out()); src.start(t); src.stop(end + 0.5);
-}
-function synthTone(midi, when = 0, dur = 1.1) {
-  const a = ctx(); if (!a) return;
-  const f = 440 * Math.pow(2, (midi - 69) / 12), t = a.currentTime + when + 0.02;
-  const out = a.createGain(); out.gain.setValueAtTime(0.0001, t);
-  out.gain.exponentialRampToValueAtTime(0.32, t + 0.012); out.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  out.connect(a.destination);
-  [[1, 'triangle', 1], [2, 'sine', 0.35], [3, 'sine', 0.12]].forEach(([m, type, g]) => {
-    const o = a.createOscillator(), gg = a.createGain(); o.type = type; o.frequency.value = f * m; gg.gain.value = g;
-    o.connect(gg).connect(out); o.start(t); o.stop(t + dur + 0.05);
-  });
-}
+function ctx() { ac = pianoCtx(); return ac; }
 const midiOf = (d) => 12 * (Math.floor(d / 7) + 1) + SEMI[d % 7];
 
 // ---------- note choice ----------
@@ -1183,6 +1139,3 @@ else {
   updateHUD();
 }
 
-// Start loading the piano on the first touch anywhere on the page, so the first note already sounds like one.
-document.addEventListener('pointerdown', () => loadPiano(), { once: true });
-document.addEventListener('keydown', () => loadPiano(), { once: true });
