@@ -76,7 +76,6 @@ export const ALL_CATEGORIES: CategoryDef[] = [
     description: 'Films I watched or keep meaning to watch.',
     emptyText: 'No movies here yet. Popcorn is ready.',
     layout: 'cover',
-    hidden: true,
     statuses: [
       { key: 'watched', label: 'Watched', glyph: '●', accent: 'dusty-blue' },
       { key: 'want-to-watch', label: 'Want to watch', glyph: '○', accent: 'butter' },

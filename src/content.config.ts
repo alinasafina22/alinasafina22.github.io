@@ -108,6 +108,7 @@ const movies = defineCollection({
       poster: image().optional(),
       posterAlt: z.string().optional(),
       director: z.string().optional(),
+      summary: z.string().optional(),
       status: z.enum(MOVIE_STATUSES),
       rating,
       watchedDate: flexDate.optional(),
@@ -194,6 +195,7 @@ const translations = defineCollection({
   schema: z.object({
     title: z.string(),
     author: z.string(),
+    director: z.string(),
     instructor: z.string(),
     platform: z.string(),
     description: z.string(),
