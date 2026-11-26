@@ -24,7 +24,7 @@ const counts = Object.fromEntries(categoriesFor(locale).map((c) => [c.key, shelv
     <PageHeader title={t('shelves.title')} description={t('shelves.lead')} doodle="book" accent="var(--color-peach)">
       <div class="tabs"><CategoryTabs current={category.key} counts={counts} /></div>
     </PageHeader>
-    {category.key === 'books' && <ReadingStats items={items} />}
+    {(category.key === 'books' || category.key === 'movies') && <ReadingStats items={items} kind={category.key} />}
     <h2 class="visually-hidden">{category.label}</h2>
     <ShelfBrowser category={category} items={items} />
   </div>

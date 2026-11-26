@@ -1,16 +1,20 @@
 ---
 /*
- * Reading stats for the Books shelf: headline numbers, books per month for a chosen year,
- * and books per year. Only finished books with a finish date are counted.
+ * Stats for the Books and Movies shelves: headline numbers, items per month for a chosen year,
+ * and items per year. Only finished books / watched films with a date are counted.
  * Plain HTML/CSS bars; a tiny script switches the year.
  */
 import type { ShelfItem } from '../utils/shelves';
-import { booksCount, monthNames, toLocale, useTranslations } from '../i18n/ui';
+import { booksCount, moviesCount, monthNames, toLocale, useTranslations } from '../i18n/ui';
 
 interface Props {
   items: ShelfItem[];
+  kind?: 'books' | 'movies';
 }
-const { items } = Astro.props;
+const { items, kind = 'books' } = Astro.props;
+const movies = kind === 'movies';
+const DONE = movies ? { status: 'watched', date: 'watched' } : { status: 'read', date: 'finished' };
+const count = (n: number) => (movies ? moviesCount(locale, n) : booksCount(locale, n));
 const locale = toLocale(Astro.currentLocale);
 const t = useTranslations(locale);
 
@@ -18,8 +22,8 @@ const MONTHS = monthNames(locale, 'short').map((m) => m.slice(0, 3));
 const MONTHS_LONG = monthNames(locale, 'long');
 
 const finished = items
-  .filter((i) => i.status.key === 'read')
-  .map((i) => ({ item: i, date: i.dates.find((d) => d.key === 'finished')?.date }))
+  .filter((i) => i.status.key === DONE.status)
+  .map((i) => ({ item: i, date: i.dates.find((d) => d.key === DONE.date)?.date }))
   .filter((x): x is { item: ShelfItem; date: Date } => Boolean(x.date));
 
 const byYear = new Map<number, { item: ShelfItem; date: Date }[][]>();
@@ -37,7 +41,7 @@ const now = new Date();
 const thisYear = now.getFullYear();
 const currentYear = years.includes(thisYear) ? thisYear : years[0];
 const readingNow = items.filter((i) => i.status.key === 'reading').length;
-const wantToRead = items.filter((i) => i.status.key === 'want-to-read').length;
+const wantToRead = items.filter((i) => i.status.key === (movies ? 'want-to-watch' : 'want-to-read')).length;
 const thisYearTotal = byYear.get(thisYear)?.flat().length ?? 0;
 
 ---
@@ -45,23 +49,25 @@ const thisYearTotal = byYear.get(thisYear)?.flat().length ?? 0;
 {
   years.length > 0 && (
     <section class="stats" aria-labelledby="stats-title" data-stats>
-      <h2 id="stats-title" class="visually-hidden">{t('stats.title')}</h2>
+      <h2 id="stats-title" class="visually-hidden">{t(movies ? 'stats.titleMovies' : 'stats.title')}</h2>
 
-      <dl class="tiles">
+      <dl class:list={['tiles', movies && 'three']}>
         <div class="tile">
-          <dt class="meta">{t('stats.readIn', { year: thisYear })}</dt>
+          <dt class="meta">{t(movies ? 'stats.watchedIn' : 'stats.readIn', { year: thisYear })}</dt>
           <dd>{thisYearTotal}</dd>
         </div>
+        {!movies && (
+          <div class="tile">
+            <dt class="meta">{t('stats.readingNow')}</dt>
+            <dd>{readingNow}</dd>
+          </div>
+        )}
         <div class="tile">
-          <dt class="meta">{t('stats.readingNow')}</dt>
-          <dd>{readingNow}</dd>
-        </div>
-        <div class="tile">
-          <dt class="meta">{t('stats.wantToRead')}</dt>
+          <dt class="meta">{t(movies ? 'stats.wantToWatch' : 'stats.wantToRead')}</dt>
           <dd>{wantToRead}</dd>
         </div>
         <div class="tile">
-          <dt class="meta">{t('stats.readSince', { year: years[years.length - 1] })}</dt>
+          <dt class="meta">{t(movies ? 'stats.watchedSince' : 'stats.readSince', { year: years[years.length - 1] })}</dt>
           <dd>{finished.length}</dd>
         </div>
       </dl>
@@ -69,7 +75,7 @@ const thisYearTotal = byYear.get(thisYear)?.flat().length ?? 0;
       <div class="charts">
         <figure class="chart months-chart">
           <figcaption>
-            <span class="chart-title">{t('stats.perMonth')}</span>
+            <span class="chart-title">{t(movies ? 'stats.moviesPerMonth' : 'stats.perMonth')}</span>
             <span class="year-chips" role="group" aria-label={t('stats.year')}>
               {years.map((y) => (
                 <button type="button" class="chip year-chip" data-year={String(y)} aria-pressed={y === currentYear ? "true" : "false"}>
@@ -89,7 +95,7 @@ const thisYearTotal = byYear.get(thisYear)?.flat().length ?? 0;
                     <button
                       type="button"
                       class="bar-hit"
-                      aria-label={`${MONTHS_LONG[m]} ${y}: ${booksCount(locale, list.length)}`}
+                      aria-label={`${MONTHS_LONG[m]} ${y}: ${count(list.length)}`}
                       disabled={list.length === 0}
                     >
                       {list.length > 0 && list.length === peak && <span class="peak">{list.length}</span>}
@@ -97,7 +103,7 @@ const thisYearTotal = byYear.get(thisYear)?.flat().length ?? 0;
                       {list.length > 0 && (
                         <span class="tip" role="tooltip">
                           <strong>
-                            {MONTHS_LONG[m]} · {booksCount(locale, list.length)}
+                            {MONTHS_LONG[m]} · {count(list.length)}
                           </strong>
                           {list.slice(0, 6).map((f) => (
                             <span class="tip-book" lang={f.item.lang}>
@@ -120,7 +126,7 @@ const thisYearTotal = byYear.get(thisYear)?.flat().length ?? 0;
 
         <figure class="chart years-chart">
           <figcaption>
-            <span class="chart-title">{t('stats.perYear')}</span>
+            <span class="chart-title">{t(movies ? 'stats.moviesPerYear' : 'stats.perYear')}</span>
           </figcaption>
           <ul class="hbars">
             {yearTotals.map(({ year, total }) => (
@@ -198,6 +204,10 @@ const thisYearTotal = byYear.get(thisYear)?.flat().length ?? 0;
   @media (min-width: 640px) {
     .tiles {
       grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .tiles.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
   }
 

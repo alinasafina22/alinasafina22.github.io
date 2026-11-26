@@ -70,13 +70,31 @@ quotes:
 
 Поля: `title`, `instructor`, `platform`, `cover`, `status` (learning | completed | want-to-take | paused | dropped), `rating`, `startDate`, `completionDate`, `note`, `learned` (список), `url`, `certificate` (ссылка на сертификат или картинка в `public/certificates/`, путь вида `/certificates/kaggle-pandas.jpg` — на странице курса появится кнопка «Сертификат ↗»). Текст файла — заметки по курсу.
 
-### Фильмы и сериалы (сейчас скрыты)
-
-Разделы Movies и TV Shows выключены. Чтобы вернуть, удали строку `hidden: true` у нужной категории в `src/utils/shelves.ts`.
-
 ### Фильм — `src/content/movies/`
 
-Поля: `title`, `year`, `poster`, `director`, `status` (watched | want-to-watch), `rating`, `watchedDate`, `note`. Текст — рецензия.
+```md
+---
+title: Одиссея
+year: 2026
+director: Кристофер Нолан
+poster: ./posters/the-odyssey.jpg   # картинка в src/content/movies/posters/
+status: watched        # watched | want-to-watch
+rating: 8              # 1–10, необязательно
+watchedDate: 2026-11   # можно с числом: 2026-11-20
+summary: "О чём фильм, без спойлеров"
+note: Пара строк впечатлений.
+tags: [приключения]
+lang: ru
+---
+
+Необязательная короткая рецензия.
+```
+
+Как у книг: `summary` — блок «О фильме», текст файла — рецензия. Если в тексте есть двоеточие с пробелом, бери его в кавычки. Над полкой фильмов — статистика по месяцам и годам (считаются фильмы со статусом `watched` и датой). Перевод — `translations/en/movies/<id>.md` (`title`, `director`, `summary`, `note`, текст).
+
+### Сериалы (сейчас скрыты)
+
+Раздел TV Shows выключен. Чтобы вернуть, удали строку `hidden: true` у категории в `src/utils/shelves.ts`.
 
 ### Сериал — `src/content/tv-shows/`
 

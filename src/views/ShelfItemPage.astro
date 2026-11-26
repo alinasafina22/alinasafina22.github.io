@@ -106,7 +106,7 @@ const named = item.creator ? t('item.by', { title: item.title, creator: item.cre
     {
       item.summary && (
         <section class="block" aria-labelledby="about">
-          <h2 id="about">{t('item.about')}</h2>
+          <h2 id="about">{cat.key === 'movies' ? t('item.aboutMovie') : t('item.about')}</h2>
           <p class="summary" lang={item.lang}>{item.summary}</p>
         </section>
       )

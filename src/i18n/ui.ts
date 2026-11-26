@@ -115,7 +115,7 @@ const en = {
   'recipes.tick': 'Tap an ingredient to tick it off.',
 
   'shelves.title': 'Bookshelves',
-  'shelves.lead': "Things I've read and learned.",
+  'shelves.lead': "Things I've read, watched and learned.",
   'shelves.all': 'All {n} →',
   'shelves.open': 'Open →',
   'shelves.categories': 'Bookshelf categories',
@@ -141,6 +141,7 @@ const en = {
   'shelves.addFile': 'Add a Markdown file to src/content/{folder}/',
   'item.review': 'Review',
   'item.about': 'About the book',
+  'item.aboutMovie': 'About the film',
   'item.notes': 'Notes',
   'item.quotes': 'Quotes',
   'item.learned': 'What I learned',
@@ -166,6 +167,12 @@ const en = {
   'stats.total': 'Total',
   'stats.asTable': 'Show as table',
   'stats.more': '+ {n} more',
+  'stats.titleMovies': 'Watching stats',
+  'stats.watchedIn': 'watched in {year}',
+  'stats.wantToWatch': 'want to watch',
+  'stats.watchedSince': 'watched since {year}',
+  'stats.moviesPerMonth': 'Films per month',
+  'stats.moviesPerYear': 'Films per year',
 
   'about.elsewhere': 'Find me elsewhere',
   'cv.download': 'Download PDF',
@@ -267,7 +274,7 @@ const ru: Record<Key, string> = {
   'recipes.tick': 'Нажми на ингредиент, чтобы отметить его.',
 
   'shelves.title': 'Полки',
-  'shelves.lead': 'Что я прочитала и чему научилась.',
+  'shelves.lead': 'Что я прочитала, посмотрела и чему научилась.',
   'shelves.all': 'Все {n} →',
   'shelves.open': 'Открыть →',
   'shelves.categories': 'Разделы полок',
@@ -293,6 +300,7 @@ const ru: Record<Key, string> = {
   'shelves.addFile': 'Добавь Markdown-файл в src/content/{folder}/',
   'item.review': 'Рецензия',
   'item.about': 'О книге',
+  'item.aboutMovie': 'О фильме',
   'item.notes': 'Заметки',
   'item.quotes': 'Цитаты',
   'item.learned': 'Что я узнала',
@@ -318,6 +326,12 @@ const ru: Record<Key, string> = {
   'stats.total': 'Всего',
   'stats.asTable': 'Показать таблицей',
   'stats.more': 'и ещё {n}',
+  'stats.titleMovies': 'Статистика фильмов',
+  'stats.watchedIn': 'посмотрено в {year}',
+  'stats.wantToWatch': 'хочу посмотреть',
+  'stats.watchedSince': 'посмотрено с {year}',
+  'stats.moviesPerMonth': 'Фильмы по месяцам',
+  'stats.moviesPerYear': 'Фильмы по годам',
 
   'about.elsewhere': 'Где меня найти',
   'cv.download': 'Скачать PDF',
@@ -351,6 +365,11 @@ export function booksCount(locale: Locale, n: number) {
   return locale === 'ru' ? `${n} ${pluralRu(n, 'книга', 'книги', 'книг')}` : `${n} ${n === 1 ? 'book' : 'books'}`;
 }
 
+/** "5 films" / "5 фильмов". */
+export function moviesCount(locale: Locale, n: number) {
+  return locale === 'ru' ? `${n} ${pluralRu(n, 'фильм', 'фильма', 'фильмов')}` : `${n} ${n === 1 ? 'film' : 'films'}`;
+}
+
 /*
  * Tags are written once (in any language) in the content files.
  * This map gives each tag a label per language. Tags missing here are shown as written.
@@ -366,6 +385,8 @@ const TAGS: Record<string, Record<Locale, string>> = {
   'техническая': { en: 'technical', ru: 'техническая' },
   'нон-фикшн': { en: 'non-fiction', ru: 'нон-фикшн' },
   'ужасы': { en: 'horror', ru: 'ужасы' },
+  'приключения': { en: 'adventure', ru: 'приключения' },
+  'ромком': { en: 'rom-com', ru: 'ромком' },
   'сайты': { en: 'websites', ru: 'сайты' },
   'учебники': { en: 'textbooks', ru: 'учебники' },
   'комиксы': { en: 'comics', ru: 'комиксы' },
