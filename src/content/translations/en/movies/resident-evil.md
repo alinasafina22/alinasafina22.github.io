@@ -1,5 +1,5 @@
 ---
 title: Resident Evil
-director: Paul W. S. Anderson
-summary: "Alice (Milla Jovovich) wakes up in an empty mansion with no memory. Soon an Umbrella Corporation commando team storms in: beneath the house lies the Hive, a secret lab where a virus has leaked and the computer running the complex has sealed everyone inside. The team must shut it down — but something in the Hive is waiting for them."
+director: Zach Cregger
+summary: "Bryan (Austin Abrams), a medical courier, is done for the night, but takes one last well-paid run: delivering a package to a remote hospital in Raccoon City, deep in the snowy mountains. The night drive soon turns into a fight for survival."
 ---
