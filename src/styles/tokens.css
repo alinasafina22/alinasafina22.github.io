@@ -23,7 +23,8 @@
 
   /* Derived */
   --color-card: #faf7f0;
-  --color-sage-deep: #6e9467; /* chart bars: sage dark enough for 3:1 contrast on paper */
+  --color-sage-deep: #6e9467; /* rating meter, accents: sage dark enough for 3:1 contrast on paper */
+  --color-chart: #d59aa3; /* chart and progress bars: powder pink */
   --color-focus: #3f6b8a;
   --color-success: #4a7a43; /* right answers (notes trainer) */
   --color-error: #a8473d; /* wrong answers */
@@ -121,6 +122,7 @@
 
   --color-card: #343632;
   --color-sage-deep: #8ab384;
+  --color-chart: #d59aa3;
   --color-focus: #8cbbe0;
   --color-success: #9cc794;
   --color-error: #eb9a90;
@@ -145,6 +147,7 @@
 
     --color-card: #343632;
     --color-sage-deep: #8ab384;
+  --color-chart: #d59aa3;
     --color-focus: #8cbbe0;
     --color-success: #9cc794;
     --color-error: #eb9a90;
@@ -170,6 +173,7 @@
 
   --color-card: #45252b;
   --color-sage-deep: #a6c99a;
+  --color-chart: #e3b5bb;
   --color-focus: #9cc6ea;
   --color-success: #b3d6a7;
   --color-error: #ffb1a7;
